@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "motion-studio-linux"
+version = "0.1.0"
+description = "Linux-first RoboClaw tooling for Motion Studio parity workflows."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "mypy==1.14.1",
+  "pytest==8.3.4",
+  "pytest-cov==6.0.0",
+  "ruff==0.9.7",
+]
+
+[project.scripts]
+roboclaw = "motion_studio_linux.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+markers = [
+  "unit: fast unit tests",
+  "integration: command-level integration tests",
+]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+packages = ["motion_studio_linux"]

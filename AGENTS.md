@@ -18,8 +18,8 @@ This file is the operational contract for human and AI contributors.
 - Implement:
   - `list`
   - `info --port ...`
-  - `flash --config ...`
-  - `test --recipe smoke_v1`
+  - `flash --config ... [--verify] [--report-dir ...]`
+  - `test --recipe smoke_v1 [--csv] [--report-dir ...]`
   - `dump --out config.json`
 
 ## Safety-Critical Rules (Do Not Violate)
@@ -49,18 +49,31 @@ Each flash report includes:
 - applied parameters
 - write-to-NVM result
 - verification result (if enabled)
+- schema version
 
 Each test report includes:
 - recipe ID + safety limits
 - pass/fail + reason
 - sampled telemetry summary
 - abort reason (if any)
+- schema version
 
 ## Engineering Defaults
 - Prefer simple, composable workflows over opaque orchestration.
 - Keep workflows explicit before adding autonomous behavior.
 - Add typed errors for: timeout, CRC/error response, no response, mode mismatch, safety abort.
 - Add tests whenever changing flash/test logic (unit first, hardware-in-loop when possible).
+
+## Commit/Push Defaults
+For large change sets (for example: multi-file feature slices, broad refactors, or >5 files changed):
+1. Run relevant tests before finalizing the slice.
+2. Create a checkpoint commit with a clear, scoped message.
+3. Push to the current upstream branch by default.
+
+Exceptions:
+- If the user explicitly says not to commit or not to push.
+- If tests are failing and the commit would hide unresolved breakage.
+- If credentials/remote access are unavailable.
 
 ## Long Codex Session Protocol
 For long coding sessions (multi-hour or multi-day), optimize for clean handoff and low context loss:

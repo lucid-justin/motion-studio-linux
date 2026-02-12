@@ -31,16 +31,16 @@ Status legend: `Implemented`, `In Progress`, `Planned`, `Unknown/Needs Research`
 
 | Capability | Linux Target | Status | Notes |
 | --- | --- | --- | --- |
-| Device discovery | Scan `/dev/ttyACM*` and `/dev/ttyUSB*` | Planned | Auto-detect + manual override |
-| Device info | Read firmware/device identity | Planned | Needed for audit artifacts |
-| Settings apply | Write selected config fields to device | Planned | Start with team-critical subset |
-| Flash to NVM | Command `94` + key | Planned | Mandatory in flash workflow |
-| Reload/verify | Command `95` + readback compare | Planned | Optional strict mode in MVP |
-| Save config to file | Dump known setting subset | Planned | JSON first, YAML optional |
-| Restore config from file | Apply saved config | Planned | Must preserve schema version |
-| Quick functional test | Recipe execution + telemetry checks | Planned | Mode-gated and fail-safe |
-| Deterministic reports | JSON per flash/test run | Planned | CSV telemetry optional |
-| Multi-address support | `(port, address)` model | Planned | `0x80` default, future expansion |
+| Device discovery | Scan `/dev/ttyACM*` and `/dev/ttyUSB*` | Implemented | Deterministic CLI output via `roboclaw list` |
+| Device info | Read firmware/device identity | In Progress | `roboclaw info` implemented; hardware transport backend integration pending |
+| Settings apply | Write selected config fields to device | In Progress | `Flasher.apply_config` + CLI flow implemented with transport abstraction |
+| Flash to NVM | Command `94` + key | In Progress | Command flow and key enforcement implemented in service/CLI |
+| Reload/verify | Command `95` + readback compare | In Progress | `--verify` reload/readback compare implemented |
+| Save config to file | Dump known setting subset | In Progress | `dump` schema v1 + deterministic JSON writer implemented; hardware transport mapping pending |
+| Restore config from file | Apply saved config | In Progress | Implemented through `flash --config ...` schema v1 path |
+| Quick functional test | Recipe execution + telemetry checks | In Progress | `test --recipe smoke_v1` with mode gating + safe-stop + telemetry scaffold |
+| Deterministic reports | JSON per flash/test run | Implemented | Deterministic JSON and optional CSV telemetry artifacts |
+| Multi-address support | `(port, address)` model | In Progress | CLI supports `--address` across MVP commands; hardware multi-address validation pending |
 | GUI parity | Motion Studio-like UI features | Planned (post-backend) | Backend maturity first |
 
 ## Differences To Outline and Track
@@ -64,6 +64,26 @@ These are the known areas where Linux implementation may diverge from Windows Mo
 5. Hardware/firmware variance:
 - Behavior can differ by RoboClaw model and firmware version.
 - We need per-model validation notes and tested compatibility matrix.
+
+## Current Unsupported / Parity Gap List (Tracked)
+1. Hardware transport backend is still abstraction-first:
+- CLI/services are implemented, but a concrete Basicmicro transport binding is not yet integrated.
+
+2. Full Motion Studio setting coverage is not complete:
+- Current config schema v1 is intentionally narrow; broader field mapping is pending.
+
+3. Windows Motion Studio file format parity is not implemented:
+- JSON schema v1 is the project format; native Motion Studio import/export mapping remains pending.
+
+4. Hardware compatibility matrix is not yet populated:
+- Model/firmware validation still requires HIL execution and documentation.
+
+## Config Schema Evolution Policy
+1. Schema versions are immutable once released.
+2. New fields should be additive where possible; removals/renames require a new major schema version.
+3. Each schema version must define deterministic hashing semantics for comparison/reporting.
+4. `flash` must reject unsupported schema versions with actionable errors.
+5. Migration utilities between schema versions should be explicit tooling, not implicit runtime mutation.
 
 ## MVP Workstreams
 1. Core connection and session layer:
