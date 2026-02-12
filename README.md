@@ -35,6 +35,14 @@ roboclaw flash --port /dev/ttyACM0 --address 0x80 --config config.json --verify
 roboclaw test --port /dev/ttyACM0 --address 0x80 --recipe smoke_v1 --csv
 ```
 
+Transport tuning (optional):
+```bash
+export ROBOCLAW_BAUD=38400
+export ROBOCLAW_TIMEOUT=0.01
+export ROBOCLAW_RETRIES=2
+export ROBOCLAW_VERBOSE=0
+```
+
 ## Test
 ```bash
 pytest
@@ -42,6 +50,7 @@ pytest
 
 HIL checklist:
 - `docs/HIL_CHECKLIST.md`
+- `docs/HIL_RUN_2026-02-12.md` (latest execution log in this environment)
 
 ## Artifacts
 - Flash/test runs emit deterministic JSON report artifacts under `reports/` (or `--report-dir`).

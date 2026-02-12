@@ -9,6 +9,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
+from motion_studio_linux.basicmicro_transport import build_basicmicro_transport_from_env
 from motion_studio_linux.config_schema import CONFIG_SCHEMA_VERSION, read_config_file, write_dump_file
 from motion_studio_linux.device_manager import DeviceManager
 from motion_studio_linux.errors import MotionStudioError
@@ -376,7 +377,12 @@ def main(
     args = parser.parse_args(argv)
 
     manager = device_manager or DeviceManager()
-    session_builder = session_factory or (lambda address: RoboClawSession(address=address))
+    session_builder = session_factory or (
+        lambda address: RoboClawSession(
+            transport=build_basicmicro_transport_from_env(),
+            address=address,
+        )
+    )
 
     try:
         handler = args.handler

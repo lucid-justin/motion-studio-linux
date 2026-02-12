@@ -32,13 +32,13 @@ Status legend: `Implemented`, `In Progress`, `Planned`, `Unknown/Needs Research`
 | Capability | Linux Target | Status | Notes |
 | --- | --- | --- | --- |
 | Device discovery | Scan `/dev/ttyACM*` and `/dev/ttyUSB*` | Implemented | Deterministic CLI output via `roboclaw list` |
-| Device info | Read firmware/device identity | In Progress | `roboclaw info` implemented; hardware transport backend integration pending |
-| Settings apply | Write selected config fields to device | In Progress | `Flasher.apply_config` + CLI flow implemented with transport abstraction |
-| Flash to NVM | Command `94` + key | In Progress | Command flow and key enforcement implemented in service/CLI |
-| Reload/verify | Command `95` + readback compare | In Progress | `--verify` reload/readback compare implemented |
-| Save config to file | Dump known setting subset | In Progress | `dump` schema v1 + deterministic JSON writer implemented; hardware transport mapping pending |
+| Device info | Read firmware/device identity | In Progress | `roboclaw info` implemented with concrete Basicmicro transport; real-device validation pending |
+| Settings apply | Write selected config fields to device | In Progress | `Flasher.apply_config` maps to Basicmicro `SetConfig`/current-limit APIs for schema v1 subset |
+| Flash to NVM | Command `94` + key | In Progress | `WriteNVM` flow integrated through Basicmicro and keyed by `0xE22EAB7A` |
+| Reload/verify | Command `95` + readback compare | In Progress | `--verify` reload/readback compare implemented via `ReadNVM` + snapshot compare |
+| Save config to file | Dump known setting subset | In Progress | `dump` schema v1 + deterministic JSON writer backed by `GetConfig`/current-limit reads |
 | Restore config from file | Apply saved config | In Progress | Implemented through `flash --config ...` schema v1 path |
-| Quick functional test | Recipe execution + telemetry checks | In Progress | `test --recipe smoke_v1` with mode gating + safe-stop + telemetry scaffold |
+| Quick functional test | Recipe execution + telemetry checks | In Progress | `test --recipe smoke_v1` with mode gating + safe-stop + Basicmicro telemetry mapping |
 | Deterministic reports | JSON per flash/test run | Implemented | Deterministic JSON and optional CSV telemetry artifacts |
 | Multi-address support | `(port, address)` model | In Progress | CLI supports `--address` across MVP commands; hardware multi-address validation pending |
 | GUI parity | Motion Studio-like UI features | Planned (post-backend) | Backend maturity first |
@@ -66,8 +66,8 @@ These are the known areas where Linux implementation may diverge from Windows Mo
 - We need per-model validation notes and tested compatibility matrix.
 
 ## Current Unsupported / Parity Gap List (Tracked)
-1. Hardware transport backend is still abstraction-first:
-- CLI/services are implemented, but a concrete Basicmicro transport binding is not yet integrated.
+1. Hardware validation is still pending:
+- Concrete Basicmicro transport is integrated, but no physically attached RoboClaw was available in this environment on `2026-02-12`.
 
 2. Full Motion Studio setting coverage is not complete:
 - Current config schema v1 is intentionally narrow; broader field mapping is pending.
@@ -77,6 +77,11 @@ These are the known areas where Linux implementation may diverge from Windows Mo
 
 4. Hardware compatibility matrix is not yet populated:
 - Model/firmware validation still requires HIL execution and documentation.
+
+## HIL Execution Status
+- On `2026-02-12` (UTC), checklist commands were executed in this environment.
+- No `/dev/ttyACM*` or `/dev/ttyUSB*` devices were present, so real hardware validation is still open.
+- Execution log: `docs/HIL_RUN_2026-02-12.md`.
 
 ## Config Schema Evolution Policy
 1. Schema versions are immutable once released.

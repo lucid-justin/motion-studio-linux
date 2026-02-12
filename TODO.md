@@ -83,9 +83,9 @@ Concrete, implementation-ready deliverables for MVP parity core.
 
 ## 9) Hardware-in-the-Loop (HIL) Validation
 - [x] Create HIL test checklist for supported RoboClaw model(s) and firmware versions.
-- [ ] Run `list`, `info`, `dump`, `flash`, `test` on at least one real device.
-- [ ] Capture sample artifacts from real runs for regression fixtures.
-- [ ] Document observed firmware/model caveats in `PLAN.md` parity matrix.
+- [ ] Run `list`, `info`, `dump`, `flash`, `test` on at least one real device. (Blocked in this environment on 2026-02-12: no `/dev/ttyACM*` or `/dev/ttyUSB*` devices detected.)
+- [ ] Capture sample artifacts from real runs for regression fixtures. (Blocked pending real hardware run.)
+- [ ] Document observed firmware/model caveats in `PLAN.md` parity matrix. (Blocked pending real hardware run.)
 
 ## 10) Documentation and Parity Tracking
 - [x] Update `README.md` with MVP usage and safety notes.
