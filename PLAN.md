@@ -121,17 +121,18 @@ These are the known areas where Linux implementation may diverge from Windows Mo
 - `roboclaw dump --out config.json`
 
 ## Immediate Next Actions
-1. Build a documented command-coverage map:
-- Motion Studio documented actions vs library-exposed commands vs project status.
+1. Execute true HIL run on attached hardware:
+- run `list`, `info`, `dump`, `flash --verify`, and `test --recipe smoke_v1`.
+- capture real flash/test artifacts and link run metadata.
 
-2. Define `config schema v1`:
-- only high-value settings first (PID/mode/limits/encoder-related fields used by your team).
+2. Convert HIL artifacts into regression fixtures:
+- add fixture-driven tests for flash/test report schemas and expected telemetry shapes.
 
-3. Define `smoke_v1` test recipe:
-- short forward/reverse test with encoder/status verification and strict safety limits.
+3. Build compatibility matrix from real runs:
+- document `(model, firmware)` caveats and pass/fail notes in parity matrix.
 
-4. Scaffold CLI and service interfaces:
-- implement stubs with typed errors and report artifact contracts before full command coverage.
+4. Expand schema/command coverage intentionally:
+- grow config schema beyond current subset and keep unsupported list explicit.
 
 ## MVP Acceptance Criteria
 - A user can connect to a RoboClaw on Linux and read device info.

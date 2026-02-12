@@ -52,6 +52,9 @@ HIL checklist:
 - `docs/HIL_CHECKLIST.md`
 - `docs/HIL_RUN_2026-02-12.md` (latest execution log in this environment)
 
+Command coverage:
+- `docs/COMMAND_COVERAGE.md`
+
 ## Artifacts
 - Flash/test runs emit deterministic JSON report artifacts under `reports/` (or `--report-dir`).
 - Test runs optionally emit CSV telemetry with `--csv`.

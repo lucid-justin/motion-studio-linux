@@ -94,6 +94,20 @@ Concrete, implementation-ready deliverables for MVP parity core.
 - [x] Add explicit "unsupported / parity gap" list for documented Motion Studio features.
 - [x] Document config schema evolution policy beyond v1.
 
+## 11) Bridge Gap (Now -> Field-Validated Parity)
+- [x] Expand Basicmicro transport failure-path tests:
+- [x] NVM key guard behavior.
+- [x] Motion mode gating for duty commands.
+- [x] Safe-stop fallback path (`DutyM1M2` failure -> per-channel stop).
+- [x] Unsupported telemetry/config field validation.
+- [x] Environment-driven transport config parsing.
+- [x] Add CLI test for default Basicmicro transport wiring when `session_factory` is not injected.
+- [x] Add report contract tests for required flash/test JSON fields.
+- [ ] Add regression tests that replay real hardware artifact fixtures from HIL runs.
+- [ ] Add compatibility matrix tests keyed by `(model, firmware)` expected behavior.
+- [x] Add command-coverage map tests that enforce explicit unsupported/unsupported-yet handling.
+- [ ] Add HIL smoke automation script to reduce manual checklist execution and data capture drift.
+
 ## MVP Exit Criteria Checklist
 - [x] `list` implemented and tested.
 - [x] `info --port ...` implemented and tested.

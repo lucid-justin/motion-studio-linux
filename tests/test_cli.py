@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+import motion_studio_linux.cli as cli_module
 from motion_studio_linux.cli import main
 from motion_studio_linux.errors import NoResponseError, OperationTimeoutError
 
@@ -186,6 +187,19 @@ def test_cli_flash_writes_report(tmp_path: Path, capsys) -> None:
     assert report_path.exists()
 
     report_payload = json.loads(report_path.read_text(encoding="utf-8"))
+    required_keys = {
+        "timestamp",
+        "port",
+        "address",
+        "firmware",
+        "config_hash",
+        "config_version",
+        "applied_parameters",
+        "write_nvm_result",
+        "verification_result",
+        "schema_version",
+    }
+    assert required_keys.issubset(report_payload.keys())
     assert report_payload["port"] == "/dev/ttyACM0"
     assert report_payload["write_nvm_result"] == "ok"
     assert report_payload["verification_result"] == "pass"
@@ -271,6 +285,17 @@ def test_cli_test_writes_json_and_optional_csv(tmp_path: Path, capsys) -> None:
     report_path = Path(result["report"])
     assert report_path.exists()
     report_payload = json.loads(report_path.read_text(encoding="utf-8"))
+    required_keys = {
+        "timestamp",
+        "recipe_id",
+        "safety_limits",
+        "passed",
+        "reason",
+        "telemetry_summary",
+        "abort_reason",
+        "schema_version",
+    }
+    assert required_keys.issubset(report_payload.keys())
     assert report_payload["recipe_id"] == "smoke_v1"
     assert report_payload["passed"] is True
 
@@ -336,3 +361,32 @@ def test_cli_help_contains_examples(capsys) -> None:
     output = capsys.readouterr()
     assert "Examples:" in output.out
     assert "roboclaw flash --port" in output.out
+
+
+@pytest.mark.integration
+def test_cli_default_session_uses_basicmicro_transport_builder(monkeypatch, capsys) -> None:
+    sentinel_transport = object()
+
+    class FakeSessionForDefault:
+        def __init__(self, *, transport, address: int) -> None:  # noqa: ANN001
+            assert transport is sentinel_transport
+            assert address == 0x80
+
+        def connect(self, _port: str) -> None:
+            return
+
+        def get_firmware(self) -> str:
+            return "v9.9.9"
+
+        def disconnect(self) -> None:
+            return
+
+    monkeypatch.setattr(cli_module, "build_basicmicro_transport_from_env", lambda: sentinel_transport)
+    monkeypatch.setattr(cli_module, "RoboClawSession", FakeSessionForDefault)
+
+    code = main(["info", "--port", "/dev/ttyACM0"])
+    output = capsys.readouterr()
+
+    assert code == 0
+    payload = json.loads(output.out)
+    assert payload["firmware"] == "v9.9.9"

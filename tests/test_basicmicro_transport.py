@@ -2,17 +2,26 @@ from __future__ import annotations
 
 import pytest
 
-from motion_studio_linux.basicmicro_transport import BasicmicroTransport
-from motion_studio_linux.errors import OperationTimeoutError
+from motion_studio_linux.basicmicro_transport import BasicmicroTransport, build_basicmicro_transport_from_env
+from motion_studio_linux.errors import ModeMismatchError, NoResponseError, OperationTimeoutError
 
 
 class FakeController:
-    def __init__(self, config_value: int = 0x0003) -> None:
+    def __init__(
+        self,
+        config_value: int = 0x0003,
+        *,
+        fail_mixed_stop: bool = False,
+    ) -> None:
         self.config_value = config_value
         self.m1_limits = (True, 35, 5)
         self.m2_limits = (True, 36, 6)
         self.closed = False
         self.set_calls: list[tuple[str, int, int]] = []
+        self.fail_mixed_stop = fail_mixed_stop
+        self.duty_m1_calls: list[int] = []
+        self.duty_m2_calls: list[int] = []
+        self.mixed_stop_calls: int = 0
 
     def Open(self) -> bool:
         return True
@@ -53,12 +62,17 @@ class FakeController:
         return True
 
     def DutyM1(self, _address: int, _duty: int) -> bool:
+        self.duty_m1_calls.append(_duty)
         return True
 
     def DutyM2(self, _address: int, _duty: int) -> bool:
+        self.duty_m2_calls.append(_duty)
         return True
 
     def DutyM1M2(self, _address: int, _m1: int, _m2: int) -> bool:
+        self.mixed_stop_calls += 1
+        if self.fail_mixed_stop:
+            return False
         return True
 
     def ReadMainBatteryVoltage(self, _address: int) -> tuple[bool, int]:
@@ -142,4 +156,80 @@ def test_transport_open_maps_packet_timeout_to_typed_error() -> None:
 
     transport = BasicmicroTransport(controller_factory=lambda *_args: TimeoutController())
     with pytest.raises(OperationTimeoutError):
+        transport.open("/dev/ttyACM0", 0x80)
+
+
+@pytest.mark.unit
+def test_transport_write_nvm_rejects_unexpected_key() -> None:
+    controller = FakeController()
+    transport = BasicmicroTransport(controller_factory=lambda *_args: controller)
+    transport.open("/dev/ttyACM0", 0x80)
+
+    with pytest.raises(ValueError, match="Unexpected NVM write key"):
+        transport.write_nvm(0x12345678)
+
+
+@pytest.mark.unit
+def test_transport_set_duty_requires_motion_enabled_mode() -> None:
+    controller = FakeController(config_value=0x0001)
+    transport = BasicmicroTransport(controller_factory=lambda *_args: controller)
+    transport.open("/dev/ttyACM0", 0x80)
+
+    with pytest.raises(ModeMismatchError):
+        transport.set_duty(1, 1000)
+
+
+@pytest.mark.unit
+def test_transport_set_duty_rejects_unsupported_channel() -> None:
+    controller = FakeController()
+    transport = BasicmicroTransport(controller_factory=lambda *_args: controller)
+    transport.open("/dev/ttyACM0", 0x80)
+
+    with pytest.raises(ValueError, match="Unsupported motor channel"):
+        transport.set_duty(3, 1000)
+
+
+@pytest.mark.unit
+def test_transport_stop_falls_back_to_individual_channels() -> None:
+    controller = FakeController(fail_mixed_stop=True)
+    transport = BasicmicroTransport(controller_factory=lambda *_args: controller)
+    transport.open("/dev/ttyACM0", 0x80)
+
+    transport.stop()
+
+    assert controller.mixed_stop_calls == 1
+    assert controller.duty_m1_calls[-1] == 0
+    assert controller.duty_m2_calls[-1] == 0
+
+
+@pytest.mark.unit
+def test_transport_read_telemetry_rejects_unknown_field() -> None:
+    controller = FakeController()
+    transport = BasicmicroTransport(controller_factory=lambda *_args: controller)
+    transport.open("/dev/ttyACM0", 0x80)
+
+    with pytest.raises(ValueError, match="Unsupported telemetry field"):
+        transport.read_telemetry(("battery_voltage", "mystery_field"))
+
+
+@pytest.mark.unit
+def test_build_transport_from_env_parses_values(monkeypatch) -> None:
+    monkeypatch.setenv("ROBOCLAW_BAUD", "57600")
+    monkeypatch.setenv("ROBOCLAW_TIMEOUT", "0.25")
+    monkeypatch.setenv("ROBOCLAW_RETRIES", "4")
+    monkeypatch.setenv("ROBOCLAW_VERBOSE", "true")
+
+    transport = build_basicmicro_transport_from_env()
+
+    assert transport._baud_rate == 57600
+    assert transport._timeout == 0.25
+    assert transport._retries == 4
+    assert transport._verbose is True
+
+
+@pytest.mark.unit
+def test_transport_open_without_dependency_and_factory_raises_no_response(monkeypatch) -> None:
+    monkeypatch.setattr("motion_studio_linux.basicmicro_transport._BASICMICRO_AVAILABLE", False)
+    transport = BasicmicroTransport(controller_factory=None)
+    with pytest.raises(NoResponseError, match="Missing runtime dependency"):
         transport.open("/dev/ttyACM0", 0x80)
