@@ -51,6 +51,7 @@ pytest
 HIL checklist:
 - `docs/HIL_CHECKLIST.md`
 - `docs/HIL_RUN_2026-02-12.md` (latest execution log in this environment)
+- `docs/HIL_RUN_2026-02-12_HV60_v4.4.3.md` (real-device validation log)
 
 Command coverage:
 - `docs/COMMAND_COVERAGE.md`

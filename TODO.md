@@ -83,9 +83,9 @@ Concrete, implementation-ready deliverables for MVP parity core.
 
 ## 9) Hardware-in-the-Loop (HIL) Validation
 - [x] Create HIL test checklist for supported RoboClaw model(s) and firmware versions.
-- [ ] Run `list`, `info`, `dump`, `flash`, `test` on at least one real device. (Blocked in this environment on 2026-02-12: no `/dev/ttyACM*` or `/dev/ttyUSB*` devices detected.)
-- [ ] Capture sample artifacts from real runs for regression fixtures. (Blocked pending real hardware run.)
-- [ ] Document observed firmware/model caveats in `PLAN.md` parity matrix. (Blocked pending real hardware run.)
+- [x] Run `list`, `info`, `dump`, `flash`, `test` on at least one real device.
+- [x] Capture sample artifacts from real runs for regression fixtures.
+- [x] Document observed firmware/model caveats in `PLAN.md` parity matrix.
 
 ## 10) Documentation and Parity Tracking
 - [x] Update `README.md` with MVP usage and safety notes.
@@ -107,6 +107,7 @@ Concrete, implementation-ready deliverables for MVP parity core.
 - [ ] Add compatibility matrix tests keyed by `(model, firmware)` expected behavior.
 - [x] Add command-coverage map tests that enforce explicit unsupported/unsupported-yet handling.
 - [ ] Add HIL smoke automation script to reduce manual checklist execution and data capture drift.
+- [ ] Re-run `flash --verify` on HV60 `v4.4.3` after verify-hardening patch and confirm timeout mitigation.
 
 ## MVP Exit Criteria Checklist
 - [x] `list` implemented and tested.

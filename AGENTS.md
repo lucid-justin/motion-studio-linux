@@ -51,6 +51,10 @@ Each flash report includes:
 - verification result (if enabled)
 - schema version
 
+Verification semantics:
+- `verification result = pass|mismatch|error`.
+- `error` means verification transport/readback failed after retry; write-to-NVM result is still reported independently.
+
 Each test report includes:
 - recipe ID + safety limits
 - pass/fail + reason

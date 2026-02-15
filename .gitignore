@@ -9,4 +9,7 @@ __pycache__/
 
 reports/*.json
 reports/*.csv
+reports/*.txt
 !reports/.gitkeep
+
+config_*.json

@@ -40,3 +40,13 @@ Use this checklist for each RoboClaw model/firmware pair under test.
 - Observed caveats by model/firmware:
 - Unexpected behavior:
 - Follow-up tasks:
+
+## Latest Completed Run
+- Date (UTC): `2026-02-12`
+- Device: `RoboClaw HV60 2x60A v4.4.3`
+- Run log: `docs/HIL_RUN_2026-02-12_HV60_v4.4.3.md`
+- Summary:
+- Command set executed on real hardware.
+- Smoke test passed.
+- Verify path caveat captured (`ReadNVM` timeout).
+- Controller restored to original state at end of run.

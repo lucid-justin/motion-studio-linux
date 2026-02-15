@@ -25,11 +25,13 @@ class FakeSession:
         should_fail: bool = False,
         motion_enabled: bool = True,
         verify_mismatch: bool = False,
+        verify_error: bool = False,
     ) -> None:
         self.firmware = firmware
         self.should_fail = should_fail
         self.motion_enabled = motion_enabled
         self.verify_mismatch = verify_mismatch
+        self.verify_error = verify_error
         self.connected: str | None = None
         self.disconnect_calls = 0
         self.stop_calls = 0
@@ -50,6 +52,8 @@ class FakeSession:
         return self.firmware
 
     def dump_config(self) -> dict[str, int]:
+        if self.verify_error:
+            raise NoResponseError("Verification readback failed.", details={"phase": "dump"})
         if self.verify_mismatch:
             return {"max_current": 99, "mode": 1}
         return self.applied_parameters
@@ -63,6 +67,8 @@ class FakeSession:
 
     def reload_from_nvm(self) -> None:
         self.reload_calls += 1
+        if self.verify_error:
+            raise OperationTimeoutError("ReadNVM timeout", details={"phase": "reload"})
 
     def is_motion_enabled(self) -> bool:
         return self.motion_enabled
@@ -233,6 +239,40 @@ def test_cli_flash_verify_mismatch_returns_nonzero(tmp_path: Path, capsys) -> No
     assert code == 15
     err = json.loads(output.err)
     assert err["code"] == "verification_mismatch"
+
+
+@pytest.mark.integration
+def test_cli_flash_verify_error_returns_nonzero_and_report(tmp_path: Path, capsys) -> None:
+    fake = FakeSession(verify_error=True)
+    config_path = tmp_path / "cfg.json"
+    config_path.write_text(
+        json.dumps({"schema_version": "v1", "parameters": {"max_current": 35, "mode": 1}}),
+        encoding="utf-8",
+    )
+    report_dir = tmp_path / "reports"
+    code = main(
+        [
+            "flash",
+            "--port",
+            "/dev/ttyACM0",
+            "--address",
+            "0x80",
+            "--config",
+            str(config_path),
+            "--verify",
+            "--report-dir",
+            str(report_dir),
+        ],
+        session_factory=lambda _address: fake,
+    )
+    output = capsys.readouterr()
+    assert code == 16
+    err = json.loads(output.err)
+    assert err["code"] == "verification_failed"
+    report_file = Path(json.loads(output.out)["report"])
+    payload = json.loads(report_file.read_text(encoding="utf-8"))
+    assert payload["write_nvm_result"] == "ok"
+    assert payload["verification_result"] == "error"
 
 
 @pytest.mark.integration

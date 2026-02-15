@@ -211,6 +211,19 @@ def _run_flash(
                 file=sys.stderr,
             )
             return 15
+        if flash_report.verification_result == "error":
+            print(
+                json.dumps(
+                    {
+                        "code": "verification_failed",
+                        "details": {"report": str(report_file)},
+                        "message": "Config readback verification failed after retry.",
+                    },
+                    sort_keys=True,
+                ),
+                file=sys.stderr,
+            )
+            return 16
         return 0
     except MotionStudioError as exc:
         failure_timestamp = utc_timestamp()
