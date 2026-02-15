@@ -122,6 +122,11 @@ These are the known areas where Linux implementation may diverge from Windows Mo
 - `roboclaw dump --out config.json`
 
 ## Immediate Next Actions
+0. Use the new offline scaffolds to keep progress unblocked without hardware:
+- architecture/contracts docs (`docs/ARCHITECTURE.md`, `docs/CONTRACTS.md`)
+- schema files (`schemas/`)
+- fixture/matrix scaffolds (`fixtures/`)
+
 1. Execute true HIL run on attached hardware:
 - run `list`, `info`, `dump`, `flash --verify`, and `test --recipe smoke_v1`.
 - capture real flash/test artifacts and link run metadata.

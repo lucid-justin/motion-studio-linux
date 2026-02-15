@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flash_report_v1.schema.json",
+  "title": "Flash Report v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "timestamp",
+    "port",
+    "address",
+    "firmware",
+    "config_hash",
+    "config_version",
+    "applied_parameters",
+    "write_nvm_result",
+    "verification_result",
+    "schema_version"
+  ],
+  "properties": {
+    "timestamp": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "port": {
+      "type": "string"
+    },
+    "address": {
+      "type": [
+        "integer",
+        "string"
+      ]
+    },
+    "firmware": {
+      "type": "string"
+    },
+    "config_hash": {
+      "type": "string"
+    },
+    "config_version": {
+      "type": "string"
+    },
+    "applied_parameters": {
+      "type": "object"
+    },
+    "write_nvm_result": {
+      "type": "string"
+    },
+    "verification_result": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema_version": {
+      "const": "flash_report_v1"
+    }
+  }
+}

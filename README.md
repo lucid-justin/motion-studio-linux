@@ -56,6 +56,16 @@ HIL checklist:
 Command coverage:
 - `docs/COMMAND_COVERAGE.md`
 
+Modular development docs:
+- `docs/ARCHITECTURE.md`
+- `docs/CONTRACTS.md`
+
+Offline scaffolds:
+- `schemas/`
+- `fixtures/hil/runs/`
+- `fixtures/compatibility/matrix.v1.json`
+- `scripts/hil/package_run.py`
+
 ## Artifacts
 - Flash/test runs emit deterministic JSON report artifacts under `reports/` (or `--report-dir`).
 - Test runs optionally emit CSV telemetry with `--csv`.

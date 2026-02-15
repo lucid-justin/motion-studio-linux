@@ -109,6 +109,17 @@ Concrete, implementation-ready deliverables for MVP parity core.
 - [ ] Add HIL smoke automation script to reduce manual checklist execution and data capture drift.
 - [ ] Re-run `flash --verify` on HV60 `v4.4.3` after verify-hardening patch and confirm timeout mitigation.
 
+## 12) Modular Buildout (No Hardware Required)
+- [x] Add architecture boundary documentation (`docs/ARCHITECTURE.md`).
+- [x] Add explicit service/report/schema contract documentation (`docs/CONTRACTS.md`).
+- [x] Scaffold JSON schema files for config/flash/test artifacts (`schemas/`).
+- [x] Scaffold HIL fixture layout for replay tests (`fixtures/hil/`).
+- [x] Scaffold compatibility matrix data file (`fixtures/compatibility/matrix.v1.json`).
+- [x] Add baseline tests that validate scaffold integrity (schemas parse, matrix shape).
+- [ ] Implement artifact replay regression tests using real HIL fixture bundles.
+- [ ] Implement compatibility-matrix-driven behavior tests for `(model, firmware)` cases.
+- [ ] Implement HIL run-packaging automation script (manifest + copy + sanitize).
+
 ## MVP Exit Criteria Checklist
 - [x] `list` implemented and tested.
 - [x] `info --port ...` implemented and tested.

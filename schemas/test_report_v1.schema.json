@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "test_report_v1.schema.json",
+  "title": "Test Report v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "timestamp",
+    "recipe_id",
+    "safety_limits",
+    "passed",
+    "reason",
+    "telemetry_summary",
+    "abort_reason",
+    "schema_version"
+  ],
+  "properties": {
+    "timestamp": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "recipe_id": {
+      "type": "string"
+    },
+    "safety_limits": {
+      "type": "object"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "telemetry_summary": {
+      "type": "object"
+    },
+    "abort_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema_version": {
+      "const": "test_report_v1"
+    }
+  }
+}
