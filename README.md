@@ -59,6 +59,7 @@ Command coverage:
 Modular development docs:
 - `docs/ARCHITECTURE.md`
 - `docs/CONTRACTS.md`
+- `docs/GUI_PARITY_PLAN.md`
 
 Offline scaffolds:
 - `schemas/`

@@ -120,6 +120,18 @@ Concrete, implementation-ready deliverables for MVP parity core.
 - [ ] Implement compatibility-matrix-driven behavior tests for `(model, firmware)` cases.
 - [ ] Implement HIL run-packaging automation script (manifest + copy + sanitize).
 
+## 13) GUI Parity Track (Post-Backend, Modular First)
+- [x] Add GUI parity roadmap doc with phased scope (`docs/GUI_PARITY_PLAN.md`).
+- [x] Scaffold GUI-agnostic contracts/state/viewmodels under `src/motion_studio_linux/gui/`.
+- [x] Add tests for GUI scaffolds to keep refactors safe.
+- [ ] Implement backend facade adapter that maps GUI actions to service-layer contracts.
+- [ ] Build MVP desktop shell (single-window app + command/status panes).
+- [ ] Implement device/session panel parity (`list`, `info`, address selection).
+- [ ] Implement config panel parity (load/edit/dump/flash + verify artifacts).
+- [ ] Implement test panel parity (`smoke_v1`, telemetry preview, safe-stop visibility).
+- [ ] Implement report explorer parity (flash/test history, JSON detail, CSV preview).
+- [ ] Add GUI integration tests around facade contracts and state transitions.
+
 ## MVP Exit Criteria Checklist
 - [x] `list` implemented and tested.
 - [x] `info --port ...` implemented and tested.

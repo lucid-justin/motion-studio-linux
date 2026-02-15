@@ -140,6 +140,10 @@ These are the known areas where Linux implementation may diverge from Windows Mo
 4. Expand schema/command coverage intentionally:
 - grow config schema beyond current subset and keep unsupported list explicit.
 
+5. Start GUI-parity scaffolding without coupling to a toolkit:
+- stabilize GUI contracts/state/viewmodels first.
+- keep GUI work as thin orchestration over backend services.
+
 ## MVP Acceptance Criteria
 - A user can connect to a RoboClaw on Linux and read device info.
 - A user can apply a config and persist it to NVM (`94`) with a clear success/failure report.
