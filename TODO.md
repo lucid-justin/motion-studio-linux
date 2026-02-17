@@ -124,7 +124,10 @@ Concrete, implementation-ready deliverables for MVP parity core.
 - [x] Add GUI parity roadmap doc with phased scope (`docs/GUI_PARITY_PLAN.md`).
 - [x] Scaffold GUI-agnostic contracts/state/viewmodels under `src/motion_studio_linux/gui/`.
 - [x] Add tests for GUI scaffolds to keep refactors safe.
-- [ ] Implement backend facade adapter that maps GUI actions to service-layer contracts.
+- [x] Implement backend facade adapter that maps GUI actions to service-layer contracts.
+- [x] Implement pure GUI state reducer for explicit state transitions.
+- [x] Build CLI-driven mock GUI shell (`roboclaw-gui-mock`) to validate facade/state wiring without toolkit lock-in.
+- [x] Add facade/reducer/mock-shell tests to lock scaffold behavior.
 - [ ] Build MVP desktop shell (single-window app + command/status panes).
 - [ ] Implement device/session panel parity (`list`, `info`, address selection).
 - [ ] Implement config panel parity (load/edit/dump/flash + verify artifacts).

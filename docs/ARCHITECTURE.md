@@ -29,6 +29,11 @@ Backend-first, modular architecture intended for reliable flash/test workflows f
 - Deterministic hashing and report shapes.
 - Typed error taxonomy.
 
+6. GUI orchestration layer (`gui/`)
+- Toolkit-agnostic facade (`gui/facade.py`) mapping UI intents to backend services.
+- Pure state reducer (`gui/reducer.py`) for explicit, testable state transitions.
+- Viewmodel helpers (`gui/viewmodels.py`) for compact display summaries.
+
 ## Extension Points
 
 - Add a new transport backend:

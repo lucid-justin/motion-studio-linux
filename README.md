@@ -33,6 +33,7 @@ roboclaw info --port /dev/ttyACM0 --address 0x80
 roboclaw dump --port /dev/ttyACM0 --address 0x80 --out config.json
 roboclaw flash --port /dev/ttyACM0 --address 0x80 --config config.json --verify
 roboclaw test --port /dev/ttyACM0 --address 0x80 --recipe smoke_v1 --csv
+roboclaw-gui-mock list
 ```
 
 Transport tuning (optional):

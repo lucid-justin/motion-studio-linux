@@ -15,6 +15,8 @@ Goal: build a Linux desktop GUI that approximates Windows Motion Studio workflow
 - Define GUI-facing contracts.
 - Define app/session/job state models.
 - Define viewmodel mappers for reports/errors.
+- Add backend facade adapter (`ServiceGuiFacade`).
+- Add pure state reducer and CLI-driven mock shell for flow validation.
 
 2. Shell MVP:
 - Single-window shell.

@@ -14,6 +14,21 @@ This document is the implementation-facing map of stable contracts for modular d
 - `Tester.run_recipe(recipe: Recipe) -> TestReport`
 - `Telemetry.poll(*snapshot_fields: str) -> TelemetrySnapshot`
 
+## GUI Contracts
+
+- `GuiBackendFacade.list_devices() -> list[str]`
+- `GuiBackendFacade.get_device_info(port, address) -> dict`
+- `GuiBackendFacade.dump_config(port, address, out_path) -> dict`
+- `GuiBackendFacade.flash_config(port, address, config_path, verify, report_dir) -> dict`
+- `GuiBackendFacade.run_test(port, address, recipe, report_dir, csv) -> dict`
+
+State-reducer events:
+- `PortsDiscovered`
+- `DeviceSelected`
+- `JobStarted`
+- `JobSucceeded`
+- `JobFailed`
+
 ## Report Contracts
 
 Flash report schema id: `flash_report_v1`

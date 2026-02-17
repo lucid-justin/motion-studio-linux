@@ -41,7 +41,7 @@ Status legend: `Implemented`, `In Progress`, `Planned`, `Unknown/Needs Research`
 | Quick functional test | Recipe execution + telemetry checks | In Progress | `test --recipe smoke_v1` passed on HV60 `v4.4.3`; more models pending |
 | Deterministic reports | JSON per flash/test run | Implemented | Deterministic JSON and optional CSV telemetry artifacts |
 | Multi-address support | `(port, address)` model | In Progress | CLI supports `--address`; validated recovery from `0x86` back to `0x80` |
-| GUI parity | Motion Studio-like UI features | Planned (post-backend) | Backend maturity first |
+| GUI parity | Motion Studio-like UI features | In Progress | Toolkit-agnostic facade/reducer/mock-shell scaffolds are in place |
 
 ## Differences To Outline and Track
 These are the known areas where Linux implementation may diverge from Windows Motion Studio and must be explicitly documented.
@@ -143,6 +143,7 @@ These are the known areas where Linux implementation may diverge from Windows Mo
 5. Start GUI-parity scaffolding without coupling to a toolkit:
 - stabilize GUI contracts/state/viewmodels first.
 - keep GUI work as thin orchestration over backend services.
+ - next slice: desktop shell + panel-by-panel parity over existing facade/reducer contracts.
 
 ## MVP Acceptance Criteria
 - A user can connect to a RoboClaw on Linux and read device info.
