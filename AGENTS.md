@@ -22,6 +22,13 @@ This file is the operational contract for human and AI contributors.
   - `test --recipe smoke_v1 [--csv] [--report-dir ...]`
   - `dump --out config.json`
 
+## Interface Surfaces
+- Canonical workflow backend remains shared across interfaces.
+- Current interface entrypoints:
+  - CLI: `roboclaw`
+  - GUI mock shell: `roboclaw-gui-mock`
+  - Tk desktop shell: `roboclaw-gui`
+
 ## Safety-Critical Rules (Do Not Violate)
 1. Always force safe stop on exceptions in test flow (`duty=0` / stop command).
 2. Never run motion commands unless packet serial mode permits motion.

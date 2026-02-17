@@ -128,11 +128,11 @@ Concrete, implementation-ready deliverables for MVP parity core.
 - [x] Implement pure GUI state reducer for explicit state transitions.
 - [x] Build CLI-driven mock GUI shell (`roboclaw-gui-mock`) to validate facade/state wiring without toolkit lock-in.
 - [x] Add facade/reducer/mock-shell tests to lock scaffold behavior.
-- [ ] Build MVP desktop shell (single-window app + command/status panes).
-- [ ] Implement device/session panel parity (`list`, `info`, address selection).
-- [ ] Implement config panel parity (load/edit/dump/flash + verify artifacts).
-- [ ] Implement test panel parity (`smoke_v1`, telemetry preview, safe-stop visibility).
-- [ ] Implement report explorer parity (flash/test history, JSON detail, CSV preview).
+- [x] Build MVP desktop shell (single-window app + command/status panes).
+- [x] Implement device/session panel parity (`list`, `info`, address selection).
+- [x] Implement config panel parity (load/edit/dump/flash + verify artifacts).
+- [x] Implement test panel parity (`smoke_v1`, telemetry preview, safe-stop visibility).
+- [x] Implement report explorer parity (flash/test history, JSON detail, CSV preview).
 - [ ] Add GUI integration tests around facade contracts and state transitions.
 
 ## MVP Exit Criteria Checklist

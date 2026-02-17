@@ -32,7 +32,9 @@ Backend-first, modular architecture intended for reliable flash/test workflows f
 6. GUI orchestration layer (`gui/`)
 - Toolkit-agnostic facade (`gui/facade.py`) mapping UI intents to backend services.
 - Pure state reducer (`gui/reducer.py`) for explicit, testable state transitions.
+- Desktop controller (`gui/desktop_controller.py`) for toolkit-agnostic shell orchestration/state updates.
 - Viewmodel helpers (`gui/viewmodels.py`) for compact display summaries.
+- Tk shell adapter (`gui/desktop_app.py`) exposed as `roboclaw-gui`.
 
 ## Extension Points
 

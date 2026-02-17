@@ -34,7 +34,12 @@ roboclaw dump --port /dev/ttyACM0 --address 0x80 --out config.json
 roboclaw flash --port /dev/ttyACM0 --address 0x80 --config config.json --verify
 roboclaw test --port /dev/ttyACM0 --address 0x80 --recipe smoke_v1 --csv
 roboclaw-gui-mock list
+roboclaw-gui
 ```
+
+Desktop GUI notes:
+- `roboclaw-gui` is a Tk shell over the same service contracts as the CLI.
+- Panels: Device, Config + Flash (JSON editor), Test, Reports.
 
 Transport tuning (optional):
 ```bash

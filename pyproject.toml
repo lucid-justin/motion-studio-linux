@@ -23,6 +23,7 @@ dev = [
 [project.scripts]
 roboclaw = "motion_studio_linux.cli:main"
 roboclaw-gui-mock = "motion_studio_linux.gui.mock_cli:main"
+roboclaw-gui = "motion_studio_linux.gui.desktop_app:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

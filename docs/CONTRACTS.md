@@ -29,6 +29,12 @@ State-reducer events:
 - `JobSucceeded`
 - `JobFailed`
 
+Desktop shell controller contract:
+- `DesktopShellController.refresh_ports() -> tuple[str, ...]`
+- `DesktopShellController.select_target(port, address_raw) -> tuple[str, int]`
+- `DesktopShellController.mark_job_started(command, message) -> None`
+- `DesktopShellController.mark_job_result(command, payload) -> str`
+
 ## Report Contracts
 
 Flash report schema id: `flash_report_v1`

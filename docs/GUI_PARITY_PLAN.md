@@ -11,19 +11,19 @@ Goal: build a Linux desktop GUI that approximates Windows Motion Studio workflow
 
 ## Phases
 
-1. Scaffold (current):
+1. Scaffold (completed):
 - Define GUI-facing contracts.
 - Define app/session/job state models.
 - Define viewmodel mappers for reports/errors.
 - Add backend facade adapter (`ServiceGuiFacade`).
 - Add pure state reducer and CLI-driven mock shell for flow validation.
 
-2. Shell MVP:
+2. Shell MVP (completed):
 - Single-window shell.
 - Device/session panel.
 - Command execution + status stream.
 
-3. Workflow Panels:
+3. Workflow Panels (in progress):
 - Config workflow panel (`dump`, `flash`, verify artifacts).
 - Test workflow panel (`smoke_v1`, telemetry summary, safety indicators).
 - Artifact/history panel with JSON/CSV preview.
@@ -38,10 +38,14 @@ Goal: build a Linux desktop GUI that approximates Windows Motion Studio workflow
   - GUI-to-backend facade protocol.
 - `motion_studio_linux.gui.state`
   - Immutable app and workflow state models.
+- `motion_studio_linux.gui.desktop_controller`
+  - Toolkit-agnostic desktop shell orchestration + state transitions.
 - `motion_studio_linux.gui.viewmodels`
   - Transform reports/errors into display-safe summaries.
+- `motion_studio_linux.gui.desktop_app`
+  - Tk rendering/wiring for the current desktop shell (`roboclaw-gui`).
 - `motion_studio_linux.gui.adapters` (future)
-  - Toolkit-specific rendering/wiring.
+  - Additional toolkit-specific rendering/wiring.
 
 ## Non-Goals (for now)
 
