@@ -133,6 +133,11 @@ Concrete, implementation-ready deliverables for MVP parity core.
 - [x] Implement config panel parity (load/edit/dump/flash + verify artifacts).
 - [x] Implement test panel parity (`smoke_v1`, telemetry preview, safe-stop visibility).
 - [x] Implement report explorer parity (flash/test history, JSON detail, CSV preview).
+- [x] Add live status strip parity (firmware/battery/current/encoder/error snapshots).
+- [x] Add global stop-all UX parity (button + keyboard shortcut).
+- [x] Add manual PWM pulse panel with bounded safety limits.
+- [ ] Add setup-form parity for General/Serial/Battery/RC sections (form-first, JSON as advanced mode).
+- [ ] Add velocity/position tuning panel parity (PID/qpps/encoder fields) once backend field support lands.
 - [ ] Add GUI integration tests around facade contracts and state transitions.
 
 ## MVP Exit Criteria Checklist

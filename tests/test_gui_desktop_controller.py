@@ -78,6 +78,49 @@ class FakeFacade:
             "reason": "completed",
         }
 
+    def get_live_status(self, *, port: str, address: int) -> dict[str, object]:
+        self.last_call = ("status", {"port": port, "address": address})
+        return {
+            "ok": True,
+            "port": port,
+            "address": f"0x{address:02X}",
+            "firmware": "v4.4.3",
+            "telemetry": {"battery_voltage": 480, "error_bits": 0},
+        }
+
+    def run_pwm_pulse(
+        self,
+        *,
+        port: str,
+        address: int,
+        duty_m1: int,
+        duty_m2: int,
+        runtime_s: float,
+    ) -> dict[str, object]:
+        self.last_call = (
+            "pwm_pulse",
+            {
+                "port": port,
+                "address": address,
+                "duty_m1": duty_m1,
+                "duty_m2": duty_m2,
+                "runtime_s": runtime_s,
+            },
+        )
+        return {
+            "ok": True,
+            "port": port,
+            "address": f"0x{address:02X}",
+            "duty_m1": duty_m1,
+            "duty_m2": duty_m2,
+            "runtime_s": runtime_s,
+            "telemetry": {"battery_voltage": 480, "error_bits": 0},
+        }
+
+    def stop_all(self, *, port: str, address: int) -> dict[str, object]:
+        self.last_call = ("stop_all", {"port": port, "address": address})
+        return {"ok": True, "port": port, "address": f"0x{address:02X}", "stopped": True}
+
 
 @pytest.mark.unit
 def test_controller_refresh_and_select_target() -> None:
@@ -136,6 +179,18 @@ def test_controller_marks_success_and_failure_job_states() -> None:
     assert controller.state.job.status == "error"
     assert controller.state.job.last_report_path == "reports/failure.json"
 
+    controller.mark_job_started(command="status", message="Running status")
+    status_summary = controller.mark_job_result(command="status", payload={"ok": True, "telemetry": {}})
+    assert status_summary == "Status refresh completed"
+
+    controller.mark_job_started(command="pwm_pulse", message="Running pulse")
+    pulse_summary = controller.mark_job_result(command="pwm_pulse", payload={"ok": True, "telemetry": {}})
+    assert pulse_summary == "PWM pulse completed"
+
+    controller.mark_job_started(command="stop_all", message="Running stop")
+    stop_summary = controller.mark_job_result(command="stop_all", payload={"ok": True, "stopped": True})
+    assert stop_summary == "Stop All completed"
+
 
 @pytest.mark.unit
 def test_controller_invokes_facade_commands() -> None:
@@ -173,6 +228,27 @@ def test_controller_invokes_facade_commands() -> None:
     assert tested["ok"] is True
     assert facade.last_call is not None
     assert facade.last_call[0] == "test"
+
+    status = controller.run_status(port="/dev/ttyACM0", address=0x80)
+    assert status["ok"] is True
+    assert facade.last_call is not None
+    assert facade.last_call[0] == "status"
+
+    pulse = controller.run_pwm_pulse(
+        port="/dev/ttyACM0",
+        address=0x80,
+        duty_m1=20,
+        duty_m2=20,
+        runtime_s=0.25,
+    )
+    assert pulse["ok"] is True
+    assert facade.last_call is not None
+    assert facade.last_call[0] == "pwm_pulse"
+
+    stop = controller.run_stop_all(port="/dev/ttyACM0", address=0x80)
+    assert stop["ok"] is True
+    assert facade.last_call is not None
+    assert facade.last_call[0] == "stop_all"
 
 
 @pytest.mark.unit

@@ -35,6 +35,7 @@ Backend-first, modular architecture intended for reliable flash/test workflows f
 - Desktop controller (`gui/desktop_controller.py`) for toolkit-agnostic shell orchestration/state updates.
 - Viewmodel helpers (`gui/viewmodels.py`) for compact display summaries.
 - Tk shell adapter (`gui/desktop_app.py`) exposed as `roboclaw-gui`.
+- Includes live status polling and manual PWM pulse/stop actions through shared session contracts.
 
 ## Extension Points
 

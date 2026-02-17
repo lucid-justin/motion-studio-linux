@@ -41,7 +41,7 @@ Status legend: `Implemented`, `In Progress`, `Planned`, `Unknown/Needs Research`
 | Quick functional test | Recipe execution + telemetry checks | In Progress | `test --recipe smoke_v1` passed on HV60 `v4.4.3`; more models pending |
 | Deterministic reports | JSON per flash/test run | Implemented | Deterministic JSON and optional CSV telemetry artifacts |
 | Multi-address support | `(port, address)` model | In Progress | CLI supports `--address`; validated recovery from `0x86` back to `0x80` |
-| GUI parity | Motion Studio-like UI features | In Progress | Tk desktop shell (`roboclaw-gui`) now covers list/info/dump/flash/test/report browsing over shared facade contracts |
+| GUI parity | Motion Studio-like UI features | In Progress | Tk desktop shell (`roboclaw-gui`) now covers list/info/dump/flash/test/report browsing, live status polling, and manual PWM pulse + stop actions over shared facade contracts |
 
 ## Differences To Outline and Track
 These are the known areas where Linux implementation may diverge from Windows Motion Studio and must be explicitly documented.
@@ -143,7 +143,7 @@ These are the known areas where Linux implementation may diverge from Windows Mo
 5. Start GUI-parity scaffolding without coupling to a toolkit:
 - stabilize GUI contracts/state/viewmodels first.
 - keep GUI work as thin orchestration over backend services.
- - next slice: GUI integration tests and panel-level parity refinements for broader Motion Studio coverage.
+ - next slice: GUI integration tests plus setup-form parity (General/Serial/Battery/RC) based on documented Motion Studio sections.
 
 ## MVP Acceptance Criteria
 - A user can connect to a RoboClaw on Linux and read device info.

@@ -38,3 +38,20 @@ class GuiBackendFacade(Protocol):
         csv: bool,
     ) -> dict[str, object]:
         """Run test workflow and return report metadata."""
+
+    def get_live_status(self, *, port: str, address: int) -> dict[str, object]:
+        """Return firmware + telemetry snapshot for live status display."""
+
+    def run_pwm_pulse(
+        self,
+        *,
+        port: str,
+        address: int,
+        duty_m1: int,
+        duty_m2: int,
+        runtime_s: float,
+    ) -> dict[str, object]:
+        """Apply short open-loop duty pulse with safety stop and telemetry snapshot."""
+
+    def stop_all(self, *, port: str, address: int) -> dict[str, object]:
+        """Issue immediate stop command for both motors."""

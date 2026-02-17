@@ -19,6 +19,8 @@ class FakeSession:
         self.motion_enabled = motion_enabled
         self.connected = False
         self.reload_calls = 0
+        self.safe_stop_calls = 0
+        self.duty_calls: list[tuple[int, int]] = []
         self.last_config: dict[str, int] = {"max_current": 40, "mode": 3}
 
     def connect(self, _port: str) -> None:
@@ -48,9 +50,11 @@ class FakeSession:
         return self.motion_enabled
 
     def set_duty(self, _channel: int, _duty: int) -> None:
+        self.duty_calls.append((_channel, _duty))
         return
 
     def safe_stop(self) -> None:
+        self.safe_stop_calls += 1
         return
 
     def read_telemetry(self, fields: tuple[str, ...]) -> dict[str, int]:
@@ -140,3 +144,63 @@ def test_facade_flash_mismatch_returns_error_payload(tmp_path: Path) -> None:
     err = result["error"]
     assert isinstance(err, dict)
     assert err["code"] == "verification_mismatch"
+
+
+@pytest.mark.unit
+def test_facade_live_status_reads_firmware_and_telemetry() -> None:
+    session = FakeSession()
+    facade = ServiceGuiFacade(session_factory=lambda _address: session)  # type: ignore[arg-type]
+
+    result = facade.get_live_status(port="/dev/ttyACM0", address=0x80)
+    assert result["ok"] is True
+    assert result["firmware"] == "v4.4.3"
+    telemetry = result["telemetry"]
+    assert isinstance(telemetry, dict)
+    assert "battery_voltage" in telemetry
+
+
+@pytest.mark.unit
+def test_facade_pwm_pulse_applies_duty_and_stops() -> None:
+    session = FakeSession()
+    facade = ServiceGuiFacade(session_factory=lambda _address: session)  # type: ignore[arg-type]
+
+    result = facade.run_pwm_pulse(
+        port="/dev/ttyACM0",
+        address=0x80,
+        duty_m1=10,
+        duty_m2=-10,
+        runtime_s=0.01,
+    )
+    assert result["ok"] is True
+    assert session.duty_calls == [(1, 10), (2, -10)]
+    assert session.safe_stop_calls == 1
+
+
+@pytest.mark.unit
+def test_facade_pwm_pulse_rejects_when_motion_disabled() -> None:
+    session = FakeSession(motion_enabled=False)
+    facade = ServiceGuiFacade(session_factory=lambda _address: session)  # type: ignore[arg-type]
+
+    result = facade.run_pwm_pulse(
+        port="/dev/ttyACM0",
+        address=0x80,
+        duty_m1=10,
+        duty_m2=10,
+        runtime_s=0.01,
+    )
+    assert result["ok"] is False
+    err = result["error"]
+    assert isinstance(err, dict)
+    assert err["code"] == "mode_mismatch"
+    assert session.safe_stop_calls == 1
+
+
+@pytest.mark.unit
+def test_facade_stop_all_calls_safe_stop() -> None:
+    session = FakeSession()
+    facade = ServiceGuiFacade(session_factory=lambda _address: session)  # type: ignore[arg-type]
+
+    result = facade.stop_all(port="/dev/ttyACM0", address=0x80)
+    assert result["ok"] is True
+    assert result["stopped"] is True
+    assert session.safe_stop_calls == 1

@@ -9,7 +9,7 @@ import traceback
 from collections.abc import Callable
 from pathlib import Path
 import tkinter as tk
-from tkinter import BooleanVar, StringVar, Tk, filedialog, messagebox
+from tkinter import BooleanVar, DoubleVar, IntVar, StringVar, Tk, filedialog, messagebox
 from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 from typing import Any
@@ -40,10 +40,22 @@ class MotionStudioDesktopShell:
         self.recipe_var = StringVar(value="smoke_v1")
         self.test_report_dir_var = StringVar(value="reports")
         self.test_csv_var = BooleanVar(value=True)
+        self.pwm_duty_m1_var = IntVar(value=0)
+        self.pwm_duty_m2_var = IntVar(value=0)
+        self.pwm_runtime_s_var = DoubleVar(value=0.5)
         self.reports_dir_var = StringVar(value="reports")
+        self.live_firmware_var = StringVar(value="-")
+        self.live_battery_var = StringVar(value="-")
+        self.live_logic_battery_var = StringVar(value="-")
+        self.live_m1_current_var = StringVar(value="-")
+        self.live_m2_current_var = StringVar(value="-")
+        self.live_enc1_var = StringVar(value="-")
+        self.live_enc2_var = StringVar(value="-")
+        self.live_error_bits_var = StringVar(value="-")
         self.status_var = StringVar(value="idle")
 
         self._build_ui()
+        self.root.bind("<space>", self._on_space_stop)
         self._update_status()
         self._refresh_ports()
         self._refresh_reports()
@@ -53,12 +65,12 @@ class MotionStudioDesktopShell:
         root_frame = ttk.Frame(self.root, padding=10)
         root_frame.pack(fill="both", expand=True)
         root_frame.columnconfigure(0, weight=1)
-        root_frame.rowconfigure(1, weight=1)
-        root_frame.rowconfigure(2, weight=0)
+        root_frame.rowconfigure(2, weight=1)
+        root_frame.rowconfigure(3, weight=0)
 
         header = ttk.Frame(root_frame)
         header.grid(row=0, column=0, sticky="ew", pady=(0, 10))
-        header.columnconfigure(7, weight=1)
+        header.columnconfigure(9, weight=1)
 
         ttk.Label(header, text="Port").grid(row=0, column=0, padx=(0, 6))
         self.port_combo = ttk.Combobox(header, textvariable=self.port_var, state="readonly", width=28)
@@ -69,9 +81,24 @@ class MotionStudioDesktopShell:
         ttk.Entry(header, textvariable=self.address_var, width=10).grid(row=0, column=4, padx=(0, 12))
         ttk.Button(header, text="Info", command=self._on_info).grid(row=0, column=5, padx=(0, 6))
         ttk.Button(header, text="Dump", command=self._on_dump).grid(row=0, column=6, padx=(0, 6))
+        ttk.Button(header, text="Refresh Status", command=self._on_status_refresh).grid(row=0, column=7, padx=(0, 6))
+        ttk.Button(header, text="STOP ALL", command=self._on_stop_all).grid(row=0, column=8, padx=(0, 6))
+
+        live_strip = ttk.LabelFrame(root_frame, text="Live Status")
+        live_strip.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        for col in range(8):
+            live_strip.columnconfigure(col, weight=1)
+        self._add_live_value(live_strip, row=0, col=0, label="Firmware", variable=self.live_firmware_var)
+        self._add_live_value(live_strip, row=0, col=1, label="Main Battery", variable=self.live_battery_var)
+        self._add_live_value(live_strip, row=0, col=2, label="Logic Battery", variable=self.live_logic_battery_var)
+        self._add_live_value(live_strip, row=0, col=3, label="M1 Current", variable=self.live_m1_current_var)
+        self._add_live_value(live_strip, row=0, col=4, label="M2 Current", variable=self.live_m2_current_var)
+        self._add_live_value(live_strip, row=0, col=5, label="Encoder1", variable=self.live_enc1_var)
+        self._add_live_value(live_strip, row=0, col=6, label="Encoder2", variable=self.live_enc2_var)
+        self._add_live_value(live_strip, row=0, col=7, label="Error Bits", variable=self.live_error_bits_var)
 
         self.notebook = ttk.Notebook(root_frame)
-        self.notebook.grid(row=1, column=0, sticky="nsew")
+        self.notebook.grid(row=2, column=0, sticky="nsew")
 
         self._build_tab_device()
         self._build_tab_config()
@@ -79,24 +106,40 @@ class MotionStudioDesktopShell:
         self._build_tab_reports()
 
         footer = ttk.Frame(root_frame)
-        footer.grid(row=2, column=0, sticky="ew", pady=(8, 0))
+        footer.grid(row=3, column=0, sticky="ew", pady=(8, 0))
         footer.columnconfigure(0, weight=1)
         ttk.Label(footer, textvariable=self.status_var, anchor="w").grid(row=0, column=0, sticky="ew")
+
+    def _add_live_value(self, parent: ttk.LabelFrame, *, row: int, col: int, label: str, variable: StringVar) -> None:
+        group = ttk.Frame(parent, padding=(6, 3))
+        group.grid(row=row, column=col, sticky="ew")
+        ttk.Label(group, text=label).grid(row=0, column=0, sticky="w")
+        ttk.Label(group, textvariable=variable).grid(row=1, column=0, sticky="w")
 
     def _build_tab_device(self) -> None:
         tab = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(tab, text="Device")
         tab.columnconfigure(0, weight=1)
-        tab.rowconfigure(1, weight=1)
+        tab.rowconfigure(2, weight=1)
 
         ttk.Label(
             tab,
-            text="Device/Session Overview\nUse this panel to validate port/address and firmware before other actions.",
+            text=(
+                "Device/Session Overview\n"
+                "Match Motion Studio workflow: connect target, read status, then configure/test.\n"
+                "Use Refresh Status for live values and STOP ALL for immediate halt."
+            ),
             justify="left",
         ).grid(row=0, column=0, sticky="w")
 
+        actions = ttk.Frame(tab)
+        actions.grid(row=1, column=0, sticky="w", pady=(10, 0))
+        ttk.Button(actions, text="Refresh Status", command=self._on_status_refresh).pack(side="left", padx=(0, 8))
+        ttk.Button(actions, text="STOP ALL", command=self._on_stop_all).pack(side="left", padx=(0, 8))
+        ttk.Label(actions, text="Spacebar shortcut: STOP ALL").pack(side="left")
+
         self.device_text = ScrolledText(tab, height=20)
-        self.device_text.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+        self.device_text.grid(row=2, column=0, sticky="nsew", pady=(10, 0))
 
     def _build_tab_config(self) -> None:
         tab = ttk.Frame(self.notebook, padding=10)
@@ -146,7 +189,7 @@ class MotionStudioDesktopShell:
         tab = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(tab, text="Test")
         tab.columnconfigure(1, weight=1)
-        tab.rowconfigure(4, weight=1)
+        tab.rowconfigure(7, weight=1)
 
         ttk.Label(tab, text="Recipe").grid(row=0, column=0, sticky="w", pady=3)
         ttk.Entry(tab, textvariable=self.recipe_var).grid(row=0, column=1, sticky="ew", pady=3)
@@ -164,8 +207,57 @@ class MotionStudioDesktopShell:
         )
         ttk.Button(tab, text="Run Test", command=self._on_test).grid(row=3, column=0, sticky="w", pady=(8, 3))
 
+        pwm_group = ttk.LabelFrame(tab, text="Manual PWM Pulse (Safety Capped)")
+        pwm_group.grid(row=4, column=0, columnspan=3, sticky="ew", pady=(12, 0))
+        pwm_group.columnconfigure(1, weight=1)
+        pwm_group.columnconfigure(3, weight=1)
+
+        ttk.Label(pwm_group, text="Duty M1 (-100..100)").grid(row=0, column=0, sticky="w", padx=6, pady=4)
+        ttk.Scale(
+            pwm_group,
+            from_=-100,
+            to=100,
+            variable=self.pwm_duty_m1_var,
+            orient="horizontal",
+        ).grid(row=0, column=1, sticky="ew", padx=6, pady=4)
+        ttk.Label(pwm_group, textvariable=self.pwm_duty_m1_var).grid(row=0, column=2, sticky="w", padx=6, pady=4)
+
+        ttk.Label(pwm_group, text="Duty M2 (-100..100)").grid(row=1, column=0, sticky="w", padx=6, pady=4)
+        ttk.Scale(
+            pwm_group,
+            from_=-100,
+            to=100,
+            variable=self.pwm_duty_m2_var,
+            orient="horizontal",
+        ).grid(row=1, column=1, sticky="ew", padx=6, pady=4)
+        ttk.Label(pwm_group, textvariable=self.pwm_duty_m2_var).grid(row=1, column=2, sticky="w", padx=6, pady=4)
+
+        ttk.Label(pwm_group, text="Pulse Runtime (s, <=2.0)").grid(row=2, column=0, sticky="w", padx=6, pady=4)
+        ttk.Entry(pwm_group, textvariable=self.pwm_runtime_s_var, width=10).grid(
+            row=2,
+            column=1,
+            sticky="w",
+            padx=6,
+            pady=4,
+        )
+        ttk.Button(pwm_group, text="Run PWM Pulse", command=self._on_pwm_pulse).grid(
+            row=2,
+            column=2,
+            sticky="w",
+            padx=6,
+            pady=4,
+        )
+        ttk.Button(pwm_group, text="STOP ALL", command=self._on_stop_all).grid(
+            row=2,
+            column=3,
+            sticky="w",
+            padx=6,
+            pady=4,
+        )
+
+        ttk.Label(tab, text="Workflow Output").grid(row=5, column=0, columnspan=3, sticky="w", pady=(10, 0))
         self.test_text = ScrolledText(tab, height=16)
-        self.test_text.grid(row=4, column=0, columnspan=3, sticky="nsew", pady=(10, 0))
+        self.test_text.grid(row=7, column=0, columnspan=3, sticky="nsew", pady=(6, 0))
 
     def _build_tab_reports(self) -> None:
         tab = ttk.Frame(self.notebook, padding=10)
@@ -250,12 +342,15 @@ class MotionStudioDesktopShell:
 
     def _render_command_result(self, command: str, payload: dict[str, Any]) -> None:
         serialized = json.dumps(payload, indent=2, sort_keys=True)
-        if command == "info":
+        if command in {"info", "status", "stop_all"}:
             self._append_text(self.device_text, serialized)
         elif command in {"dump", "flash"}:
             self._append_text(self.config_text, serialized)
-        elif command == "test":
+        elif command in {"test", "pwm_pulse"}:
             self._append_text(self.test_text, serialized)
+
+        if bool(payload.get("ok")):
+            self._update_live_status(payload)
 
         if command == "dump" and bool(payload.get("ok")):
             out_path = payload.get("out_path")
@@ -268,6 +363,23 @@ class MotionStudioDesktopShell:
             report_path = Path(str(report_value))
             self.reports_dir_var.set(str(report_path.parent))
             self._refresh_reports()
+
+    def _update_live_status(self, payload: dict[str, Any]) -> None:
+        firmware = payload.get("firmware")
+        if isinstance(firmware, str) and firmware.strip():
+            self.live_firmware_var.set(firmware.strip())
+
+        telemetry = payload.get("telemetry")
+        if not isinstance(telemetry, dict):
+            return
+
+        self.live_battery_var.set(_format_deci_volts(telemetry.get("battery_voltage")))
+        self.live_logic_battery_var.set(_format_deci_volts(telemetry.get("logic_battery_voltage")))
+        self.live_m1_current_var.set(_format_raw(telemetry.get("motor1_current")))
+        self.live_m2_current_var.set(_format_raw(telemetry.get("motor2_current")))
+        self.live_enc1_var.set(_format_raw(telemetry.get("encoder1")))
+        self.live_enc2_var.set(_format_raw(telemetry.get("encoder2")))
+        self.live_error_bits_var.set(_format_error_bits(telemetry.get("error_bits")))
 
     def _refresh_ports(self) -> None:
         ports = self.controller.refresh_ports()
@@ -285,6 +397,13 @@ class MotionStudioDesktopShell:
             return
         port, address = target
         self._run_async("info", lambda: self.controller.run_info(port=port, address=address))
+
+    def _on_status_refresh(self) -> None:
+        target = self._select_target()
+        if target is None:
+            return
+        port, address = target
+        self._run_async("status", lambda: self.controller.run_status(port=port, address=address))
 
     def _on_dump(self) -> None:
         target = self._select_target()
@@ -338,6 +457,33 @@ class MotionStudioDesktopShell:
                 csv=bool(self.test_csv_var.get()),
             ),
         )
+
+    def _on_pwm_pulse(self) -> None:
+        target = self._select_target()
+        if target is None:
+            return
+        port, address = target
+        runtime_s = float(self.pwm_runtime_s_var.get())
+        self._run_async(
+            "pwm_pulse",
+            lambda: self.controller.run_pwm_pulse(
+                port=port,
+                address=address,
+                duty_m1=int(self.pwm_duty_m1_var.get()),
+                duty_m2=int(self.pwm_duty_m2_var.get()),
+                runtime_s=runtime_s,
+            ),
+        )
+
+    def _on_stop_all(self) -> None:
+        target = self._select_target()
+        if target is None:
+            return
+        port, address = target
+        self._run_async("stop_all", lambda: self.controller.run_stop_all(port=port, address=address))
+
+    def _on_space_stop(self, _event: object) -> None:
+        self._on_stop_all()
 
     def _load_config_editor(self) -> None:
         path = self.config_path_var.get().strip()
@@ -451,6 +597,28 @@ class MotionStudioDesktopShell:
         if path:
             self.reports_dir_var.set(path)
             self._refresh_reports()
+
+
+def _format_raw(value: object) -> str:
+    if value is None:
+        return "-"
+    return str(value)
+
+
+def _format_deci_volts(value: object) -> str:
+    if value is None:
+        return "-"
+    if isinstance(value, (int, float)):
+        return f"{float(value) / 10.0:.1f} V ({value})"
+    return str(value)
+
+
+def _format_error_bits(value: object) -> str:
+    if isinstance(value, int):
+        return f"0x{value:04X}"
+    if value is None:
+        return "-"
+    return str(value)
 
 
 def main() -> int:

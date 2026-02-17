@@ -61,6 +61,9 @@ class DesktopShellController:
     def run_info(self, *, port: str, address: int) -> dict[str, Any]:
         return _coerce_payload(self._facade.get_device_info(port=port, address=address))
 
+    def run_status(self, *, port: str, address: int) -> dict[str, Any]:
+        return _coerce_payload(self._facade.get_live_status(port=port, address=address))
+
     def run_dump(self, *, port: str, address: int, out_path: str) -> dict[str, Any]:
         return _coerce_payload(self._facade.dump_config(port=port, address=address, out_path=out_path))
 
@@ -102,6 +105,28 @@ class DesktopShellController:
             )
         )
 
+    def run_pwm_pulse(
+        self,
+        *,
+        port: str,
+        address: int,
+        duty_m1: int,
+        duty_m2: int,
+        runtime_s: float,
+    ) -> dict[str, Any]:
+        return _coerce_payload(
+            self._facade.run_pwm_pulse(
+                port=port,
+                address=address,
+                duty_m1=duty_m1,
+                duty_m2=duty_m2,
+                runtime_s=runtime_s,
+            )
+        )
+
+    def run_stop_all(self, *, port: str, address: int) -> dict[str, Any]:
+        return _coerce_payload(self._facade.stop_all(port=port, address=address))
+
     def list_reports(self, *, report_dir: Path) -> list[Path]:
         return list_report_files(report_dir)
 
@@ -114,6 +139,12 @@ class DesktopShellController:
             return summarize_flash_result(dict(payload))
         if command == "test":
             return summarize_test_result(dict(payload))
+        if command == "status":
+            return "Status refresh completed"
+        if command == "pwm_pulse":
+            return "PWM pulse completed"
+        if command == "stop_all":
+            return "Stop All completed"
         return f"{command} completed"
 
 

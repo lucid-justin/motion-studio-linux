@@ -21,6 +21,9 @@ This document is the implementation-facing map of stable contracts for modular d
 - `GuiBackendFacade.dump_config(port, address, out_path) -> dict`
 - `GuiBackendFacade.flash_config(port, address, config_path, verify, report_dir) -> dict`
 - `GuiBackendFacade.run_test(port, address, recipe, report_dir, csv) -> dict`
+- `GuiBackendFacade.get_live_status(port, address) -> dict`
+- `GuiBackendFacade.run_pwm_pulse(port, address, duty_m1, duty_m2, runtime_s) -> dict`
+- `GuiBackendFacade.stop_all(port, address) -> dict`
 
 State-reducer events:
 - `PortsDiscovered`
@@ -34,6 +37,9 @@ Desktop shell controller contract:
 - `DesktopShellController.select_target(port, address_raw) -> tuple[str, int]`
 - `DesktopShellController.mark_job_started(command, message) -> None`
 - `DesktopShellController.mark_job_result(command, payload) -> str`
+- `DesktopShellController.run_status(port, address) -> dict`
+- `DesktopShellController.run_pwm_pulse(port, address, duty_m1, duty_m2, runtime_s) -> dict`
+- `DesktopShellController.run_stop_all(port, address) -> dict`
 
 ## Report Contracts
 

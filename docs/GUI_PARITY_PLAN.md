@@ -23,14 +23,16 @@ Goal: build a Linux desktop GUI that approximates Windows Motion Studio workflow
 - Device/session panel.
 - Command execution + status stream.
 
-3. Workflow Panels (in progress):
+3. Workflow Panels (baseline completed):
 - Config workflow panel (`dump`, `flash`, verify artifacts).
 - Test workflow panel (`smoke_v1`, telemetry summary, safety indicators).
 - Artifact/history panel with JSON/CSV preview.
+- Live status strip + manual PWM pulse + global stop-all safety actions.
 
-4. Parity Expansion:
+4. Parity Expansion (in progress):
 - Add fields/actions to mirror documented Motion Studio capabilities.
 - Track unsupported behaviors explicitly in `docs/COMMAND_COVERAGE.md`.
+- Research notes and feature mapping: `docs/MOTION_STUDIO_UI_RESEARCH.md`.
 
 ## Proposed Package Boundaries
 

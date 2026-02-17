@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any, Callable
 
 from motion_studio_linux.basicmicro_transport import build_basicmicro_transport_from_env
 from motion_studio_linux.config_schema import CONFIG_SCHEMA_VERSION, read_config_file, write_dump_file
 from motion_studio_linux.device_manager import DeviceManager
-from motion_studio_linux.errors import MotionStudioError
+from motion_studio_linux.errors import ModeMismatchError, MotionStudioError
 from motion_studio_linux.flasher import Flasher
 from motion_studio_linux.models import ConfigPayload, utc_timestamp
 from motion_studio_linux.recipes import resolve_recipe
@@ -18,6 +19,15 @@ from motion_studio_linux.telemetry import Telemetry
 from motion_studio_linux.tester import Tester
 
 SessionFactory = Callable[[int], RoboClawSession]
+STATUS_FIELDS = (
+    "battery_voltage",
+    "logic_battery_voltage",
+    "motor1_current",
+    "motor2_current",
+    "encoder1",
+    "encoder2",
+    "error_bits",
+)
 
 
 class ServiceGuiFacade:
@@ -231,5 +241,72 @@ class ServiceGuiFacade:
                 },
             )
             return {"ok": False, "report": str(report_path), "error": error_payload}
+        finally:
+            session.disconnect()
+
+    def get_live_status(self, *, port: str, address: int) -> dict[str, object]:
+        session = self._session_factory(address)
+        try:
+            session.connect(port)
+            firmware = session.get_firmware()
+            telemetry = session.read_telemetry(STATUS_FIELDS)
+            return {"ok": True, "port": port, "address": f"0x{address:02X}", "firmware": firmware, "telemetry": telemetry}
+        except MotionStudioError as exc:
+            return {"ok": False, "error": exc.to_dict()}
+        finally:
+            session.disconnect()
+
+    def run_pwm_pulse(
+        self,
+        *,
+        port: str,
+        address: int,
+        duty_m1: int,
+        duty_m2: int,
+        runtime_s: float,
+    ) -> dict[str, object]:
+        session = self._session_factory(address)
+        max_duty = 100
+        max_runtime_s = 2.0
+        try:
+            if abs(duty_m1) > max_duty or abs(duty_m2) > max_duty:
+                raise ValueError(f"Duty values must be within +/-{max_duty}.")
+            if runtime_s <= 0 or runtime_s > max_runtime_s:
+                raise ValueError(f"runtime_s must be >0 and <= {max_runtime_s}.")
+
+            session.connect(port)
+            if not session.is_motion_enabled():
+                raise ModeMismatchError("Packet serial mode does not permit motion commands.")
+
+            session.set_duty(1, int(duty_m1))
+            session.set_duty(2, int(duty_m2))
+            time.sleep(runtime_s)
+            telemetry = session.read_telemetry(STATUS_FIELDS)
+            return {
+                "ok": True,
+                "port": port,
+                "address": f"0x{address:02X}",
+                "duty_m1": int(duty_m1),
+                "duty_m2": int(duty_m2),
+                "runtime_s": runtime_s,
+                "telemetry": telemetry,
+            }
+        except (MotionStudioError, ValueError) as exc:
+            if isinstance(exc, MotionStudioError):
+                return {"ok": False, "error": exc.to_dict()}
+            return {"ok": False, "error": {"code": "invalid_input", "message": str(exc), "details": {}}}
+        finally:
+            # Safety invariant for manual pulse: always issue stop when command exits.
+            session.safe_stop()
+            session.disconnect()
+
+    def stop_all(self, *, port: str, address: int) -> dict[str, object]:
+        session = self._session_factory(address)
+        try:
+            session.connect(port)
+            session.safe_stop()
+            return {"ok": True, "port": port, "address": f"0x{address:02X}", "stopped": True}
+        except MotionStudioError as exc:
+            return {"ok": False, "error": exc.to_dict()}
         finally:
             session.disconnect()

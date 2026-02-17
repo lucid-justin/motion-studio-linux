@@ -35,6 +35,7 @@ This file is the operational contract for human and AI contributors.
 3. Flash flow must persist config to NVM with command `94` and key `0xE22EAB7A`.
 4. Support reload/readback verification (command `95`) for flash verification mode.
 5. Every flash/test run must emit deterministic artifacts (JSON report; CSV optional).
+6. GUI manual motion controls must remain safety bounded (duty/runtime caps) and invoke safe-stop on exit.
 
 ## Required Service Contracts
 - `DeviceManager.list_ports()`

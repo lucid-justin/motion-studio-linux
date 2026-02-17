@@ -40,6 +40,8 @@ roboclaw-gui
 Desktop GUI notes:
 - `roboclaw-gui` is a Tk shell over the same service contracts as the CLI.
 - Panels: Device, Config + Flash (JSON editor), Test, Reports.
+- Live status strip includes firmware/battery/current/encoder/error snapshots.
+- Manual PWM pulse controls are safety-capped and paired with `STOP ALL` (button + spacebar).
 
 Transport tuning (optional):
 ```bash
@@ -66,6 +68,7 @@ Modular development docs:
 - `docs/ARCHITECTURE.md`
 - `docs/CONTRACTS.md`
 - `docs/GUI_PARITY_PLAN.md`
+- `docs/MOTION_STUDIO_UI_RESEARCH.md`
 
 Offline scaffolds:
 - `schemas/`
