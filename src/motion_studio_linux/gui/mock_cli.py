@@ -29,6 +29,10 @@ def _build_parser() -> argparse.ArgumentParser:
     info.add_argument("--port", required=True)
     info.add_argument("--address", default="0x80")
 
+    status = subparsers.add_parser("status", help="Mock GUI: read live status telemetry.")
+    status.add_argument("--port", required=True)
+    status.add_argument("--address", default="0x80")
+
     dump = subparsers.add_parser("dump", help="Mock GUI: dump config.")
     dump.add_argument("--port", required=True)
     dump.add_argument("--address", default="0x80")
@@ -47,6 +51,17 @@ def _build_parser() -> argparse.ArgumentParser:
     test.add_argument("--recipe", required=True)
     test.add_argument("--report-dir", default="reports")
     test.add_argument("--csv", action="store_true")
+
+    pwm = subparsers.add_parser("pwm", help="Mock GUI: run bounded pwm pulse.")
+    pwm.add_argument("--port", required=True)
+    pwm.add_argument("--address", default="0x80")
+    pwm.add_argument("--duty-m1", type=int, default=0)
+    pwm.add_argument("--duty-m2", type=int, default=0)
+    pwm.add_argument("--runtime-s", type=float, default=0.5)
+
+    stop = subparsers.add_parser("stop", help="Mock GUI: stop all motors.")
+    stop.add_argument("--port", required=True)
+    stop.add_argument("--address", default="0x80")
 
     return parser
 
@@ -75,6 +90,18 @@ def main(argv: Sequence[str] | None = None, *, facade: ServiceGuiFacade | None =
         result = backend.get_device_info(port=port, address=address)
         if result.get("ok"):
             state = reduce_state(state, JobSucceeded(message="Info loaded"))
+            print(json.dumps({"result": result, "state": state.job.status}, sort_keys=True))
+            return 0
+        error = dict(result.get("error", {}))
+        state = reduce_state(state, JobFailed(message=summarize_error(error)))
+        print(json.dumps({"error": error, "state": state.job.status}, sort_keys=True))
+        return 1
+
+    if args.command == "status":
+        state = reduce_state(state, JobStarted(command="status", message="Refreshing status"))
+        result = backend.get_live_status(port=port, address=address)
+        if result.get("ok"):
+            state = reduce_state(state, JobSucceeded(message="Status loaded"))
             print(json.dumps({"result": result, "state": state.job.status}, sort_keys=True))
             return 0
         error = dict(result.get("error", {}))
@@ -135,6 +162,36 @@ def main(argv: Sequence[str] | None = None, *, facade: ServiceGuiFacade | None =
         error = dict(result.get("error", {}))
         state = reduce_state(state, JobFailed(message=summarize_error(error), report_path=str(result.get("report"))))
         print(json.dumps({"error": error, "report": result.get("report"), "state": state.job.status}, sort_keys=True))
+        return 1
+
+    if args.command == "pwm":
+        state = reduce_state(state, JobStarted(command="pwm_pulse", message="Running PWM pulse"))
+        result = backend.run_pwm_pulse(
+            port=port,
+            address=address,
+            duty_m1=int(args.duty_m1),
+            duty_m2=int(args.duty_m2),
+            runtime_s=float(args.runtime_s),
+        )
+        if result.get("ok"):
+            state = reduce_state(state, JobSucceeded(message="PWM pulse completed"))
+            print(json.dumps({"result": result, "state": state.job.status}, sort_keys=True))
+            return 0
+        error = dict(result.get("error", {}))
+        state = reduce_state(state, JobFailed(message=summarize_error(error)))
+        print(json.dumps({"error": error, "state": state.job.status}, sort_keys=True))
+        return 1
+
+    if args.command == "stop":
+        state = reduce_state(state, JobStarted(command="stop_all", message="Stopping motors"))
+        result = backend.stop_all(port=port, address=address)
+        if result.get("ok"):
+            state = reduce_state(state, JobSucceeded(message="Stop all completed"))
+            print(json.dumps({"result": result, "state": state.job.status}, sort_keys=True))
+            return 0
+        error = dict(result.get("error", {}))
+        state = reduce_state(state, JobFailed(message=summarize_error(error)))
+        print(json.dumps({"error": error, "state": state.job.status}, sort_keys=True))
         return 1
 
     return 2

@@ -139,7 +139,7 @@ Concrete, implementation-ready deliverables for MVP parity core.
 - [x] Add setup-form parity for General/Serial/Battery/RC sections (form-first, JSON as advanced mode).
 - [ ] Expand setup-form field coverage beyond schema v1 subset while preserving unsupported-key visibility.
 - [ ] Add velocity/position tuning panel parity (PID/qpps/encoder fields) once backend field support lands.
-- [ ] Add GUI integration tests around facade contracts and state transitions.
+- [x] Add GUI integration tests around facade contracts and state transitions.
 
 ## MVP Exit Criteria Checklist
 - [x] `list` implemented and tested.

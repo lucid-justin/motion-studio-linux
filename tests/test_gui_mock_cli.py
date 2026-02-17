@@ -31,6 +31,20 @@ class FakeFacade:
         del port, address, recipe, report_dir, csv
         return {"ok": True, "report": "reports/mock_test.json", "passed": True, "reason": "completed"}
 
+    def get_live_status(self, *, port: str, address: int) -> dict[str, object]:
+        del port, address
+        return {"ok": True, "firmware": "v4.4.3", "telemetry": {"battery_voltage": 480}}
+
+    def run_pwm_pulse(
+        self, *, port: str, address: int, duty_m1: int, duty_m2: int, runtime_s: float
+    ) -> dict[str, object]:
+        del port, address, duty_m1, duty_m2, runtime_s
+        return {"ok": True, "telemetry": {"battery_voltage": 480}}
+
+    def stop_all(self, *, port: str, address: int) -> dict[str, object]:
+        del port, address
+        return {"ok": True, "stopped": True}
+
 
 @pytest.mark.integration
 def test_mock_cli_list_and_info(capsys) -> None:
@@ -62,3 +76,42 @@ def test_mock_cli_flash_and_test(capsys) -> None:
     out_test = json.loads(capsys.readouterr().out)
     assert code_test == 0
     assert out_test["state"] == "success"
+
+
+@pytest.mark.integration
+def test_mock_cli_status_pwm_and_stop(capsys) -> None:
+    code_status = main(
+        ["status", "--port", "/dev/ttyACM0", "--address", "0x80"],
+        facade=FakeFacade(),  # type: ignore[arg-type]
+    )
+    out_status = json.loads(capsys.readouterr().out)
+    assert code_status == 0
+    assert out_status["state"] == "success"
+
+    code_pwm = main(
+        [
+            "pwm",
+            "--port",
+            "/dev/ttyACM0",
+            "--address",
+            "0x80",
+            "--duty-m1",
+            "10",
+            "--duty-m2",
+            "-10",
+            "--runtime-s",
+            "0.05",
+        ],
+        facade=FakeFacade(),  # type: ignore[arg-type]
+    )
+    out_pwm = json.loads(capsys.readouterr().out)
+    assert code_pwm == 0
+    assert out_pwm["state"] == "success"
+
+    code_stop = main(
+        ["stop", "--port", "/dev/ttyACM0", "--address", "0x80"],
+        facade=FakeFacade(),  # type: ignore[arg-type]
+    )
+    out_stop = json.loads(capsys.readouterr().out)
+    assert code_stop == 0
+    assert out_stop["state"] == "success"

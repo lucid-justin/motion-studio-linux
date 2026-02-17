@@ -34,6 +34,9 @@ roboclaw dump --port /dev/ttyACM0 --address 0x80 --out config.json
 roboclaw flash --port /dev/ttyACM0 --address 0x80 --config config.json --verify
 roboclaw test --port /dev/ttyACM0 --address 0x80 --recipe smoke_v1 --csv
 roboclaw-gui-mock list
+roboclaw-gui-mock status --port /dev/ttyACM0 --address 0x80
+roboclaw-gui-mock pwm --port /dev/ttyACM0 --address 0x80 --duty-m1 10 --duty-m2 -10 --runtime-s 0.1
+roboclaw-gui-mock stop --port /dev/ttyACM0 --address 0x80
 roboclaw-gui
 ```
 
