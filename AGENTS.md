@@ -28,6 +28,7 @@ This file is the operational contract for human and AI contributors.
   - CLI: `roboclaw`
   - GUI mock shell: `roboclaw-gui-mock`
   - Tk desktop shell: `roboclaw-gui`
+- Tk desktop shell includes live status, manual PWM pulse/stop, and setup-form editing over schema v1-supported config fields.
 
 ## Safety-Critical Rules (Do Not Violate)
 1. Always force safe stop on exceptions in test flow (`duty=0` / stop command).

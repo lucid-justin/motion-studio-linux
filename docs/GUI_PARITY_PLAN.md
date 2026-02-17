@@ -25,6 +25,7 @@ Goal: build a Linux desktop GUI that approximates Windows Motion Studio workflow
 
 3. Workflow Panels (baseline completed):
 - Config workflow panel (`dump`, `flash`, verify artifacts).
+- Setup-form workflow for General/Serial/Battery/RC (supported v1 subset + unsupported-key visibility).
 - Test workflow panel (`smoke_v1`, telemetry summary, safety indicators).
 - Artifact/history panel with JSON/CSV preview.
 - Live status strip + manual PWM pulse + global stop-all safety actions.

@@ -41,6 +41,11 @@ Desktop shell controller contract:
 - `DesktopShellController.run_pwm_pulse(port, address, duty_m1, duty_m2, runtime_s) -> dict`
 - `DesktopShellController.run_stop_all(port, address) -> dict`
 
+Setup-form helper contract:
+- `model_from_config_payload(payload) -> SetupFormModel`
+- `config_payload_from_model(model) -> dict`
+- `unsupported_parameter_keys(payload) -> list[str]`
+
 ## Report Contracts
 
 Flash report schema id: `flash_report_v1`

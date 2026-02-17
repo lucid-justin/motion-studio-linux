@@ -46,6 +46,7 @@ Implemented now in `roboclaw-gui`:
 
 2. Config/file workflow:
 - Dump to JSON, load/edit/save JSON, flash from file/editor, verify toggle.
+- Motion-Studio-style setup form sections (General/Serial/Battery/RC) mapped to schema v1-supported fields.
 
 3. Live status:
 - One-click status refresh with firmware + telemetry strip:

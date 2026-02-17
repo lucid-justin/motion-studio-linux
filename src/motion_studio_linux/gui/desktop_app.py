@@ -16,6 +16,12 @@ from typing import Any
 
 from motion_studio_linux.gui.desktop_controller import DesktopShellController
 from motion_studio_linux.gui.facade import ServiceGuiFacade
+from motion_studio_linux.gui.setup_form import (
+    SetupFormModel,
+    config_payload_from_model,
+    model_from_config_payload,
+    unsupported_parameter_keys,
+)
 from motion_studio_linux.gui.state import AppState
 
 
@@ -37,6 +43,12 @@ class MotionStudioDesktopShell:
         self.config_path_var = StringVar(value="config.json")
         self.flash_report_dir_var = StringVar(value="reports")
         self.flash_verify_var = BooleanVar(value=True)
+        self.setup_mode_var = StringVar(value="3")
+        self.setup_use_unified_current_var = BooleanVar(value=True)
+        self.setup_max_current_var = StringVar(value="12000")
+        self.setup_max_current_m1_var = StringVar(value="")
+        self.setup_max_current_m2_var = StringVar(value="")
+        self.setup_form_status_var = StringVar(value="Form is in sync with supported fields only.")
         self.recipe_var = StringVar(value="smoke_v1")
         self.test_report_dir_var = StringVar(value="reports")
         self.test_csv_var = BooleanVar(value=True)
@@ -55,6 +67,8 @@ class MotionStudioDesktopShell:
         self.status_var = StringVar(value="idle")
 
         self._build_ui()
+        self.setup_use_unified_current_var.trace_add("write", self._on_setup_toggle_current_mode)
+        self._on_setup_toggle_current_mode()
         self.root.bind("<space>", self._on_space_stop)
         self._update_status()
         self._refresh_ports()
@@ -145,8 +159,8 @@ class MotionStudioDesktopShell:
         tab = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(tab, text="Config + Flash")
         tab.columnconfigure(1, weight=1)
-        tab.rowconfigure(6, weight=1)
-        tab.rowconfigure(8, weight=1)
+        tab.rowconfigure(9, weight=1)
+        tab.rowconfigure(11, weight=1)
 
         ttk.Label(tab, text="Dump Output Path").grid(row=0, column=0, sticky="w", pady=3)
         ttk.Entry(tab, textvariable=self.dump_out_var).grid(row=0, column=1, sticky="ew", pady=3)
@@ -168,22 +182,99 @@ class MotionStudioDesktopShell:
             pady=3,
         )
 
-        buttons = ttk.Frame(tab)
-        buttons.grid(row=4, column=0, columnspan=3, sticky="w", pady=(8, 3))
-        ttk.Button(buttons, text="Dump Config", command=self._on_dump).pack(side="left", padx=(0, 8))
-        ttk.Button(buttons, text="Load JSON", command=self._load_config_editor).pack(side="left", padx=(0, 8))
-        ttk.Button(buttons, text="Save JSON", command=self._save_config_editor).pack(side="left", padx=(0, 8))
-        ttk.Button(buttons, text="Format JSON", command=self._format_config_editor).pack(side="left", padx=(0, 8))
-        ttk.Button(buttons, text="Flash Config", command=self._on_flash).pack(side="left", padx=(0, 8))
-        ttk.Button(buttons, text="Flash Editor", command=self._flash_from_editor).pack(side="left")
+        setup_frame = ttk.LabelFrame(tab, text="Setup Forms (Motion Studio Style, Supported Fields)")
+        setup_frame.grid(row=4, column=0, columnspan=3, sticky="ew", pady=(10, 0))
+        for col in range(4):
+            setup_frame.columnconfigure(col, weight=1)
 
-        ttk.Label(tab, text="Config Editor (JSON)").grid(row=5, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        general = ttk.LabelFrame(setup_frame, text="General")
+        general.grid(row=0, column=0, sticky="nsew", padx=6, pady=6)
+        ttk.Label(general, text="Mode").grid(row=0, column=0, sticky="w", padx=6, pady=(6, 2))
+        ttk.Combobox(
+            general,
+            textvariable=self.setup_mode_var,
+            values=("0", "1", "2", "3"),
+            state="readonly",
+            width=8,
+        ).grid(row=1, column=0, sticky="w", padx=6, pady=(0, 6))
+        ttk.Label(general, text="Packet serial motion enabled when mode=3").grid(
+            row=2, column=0, sticky="w", padx=6, pady=(0, 6)
+        )
+
+        serial = ttk.LabelFrame(setup_frame, text="Serial")
+        serial.grid(row=0, column=1, sticky="nsew", padx=6, pady=6)
+        ttk.Label(serial, text="Port and address are controlled in the header.").grid(
+            row=0, column=0, sticky="w", padx=6, pady=(6, 2)
+        )
+        ttk.Label(serial, text="Schema v1 does not persist baud/address fields yet.").grid(
+            row=1, column=0, sticky="w", padx=6, pady=(0, 6)
+        )
+        ttk.Label(serial, textvariable=self.port_var).grid(row=2, column=0, sticky="w", padx=6, pady=(0, 2))
+        ttk.Label(serial, textvariable=self.address_var).grid(row=3, column=0, sticky="w", padx=6, pady=(0, 6))
+
+        battery = ttk.LabelFrame(setup_frame, text="Battery / Current")
+        battery.grid(row=0, column=2, sticky="nsew", padx=6, pady=6)
+        ttk.Checkbutton(
+            battery,
+            text="Unified current limit",
+            variable=self.setup_use_unified_current_var,
+        ).grid(row=0, column=0, columnspan=2, sticky="w", padx=6, pady=(6, 4))
+
+        ttk.Label(battery, text="max_current").grid(row=1, column=0, sticky="w", padx=6, pady=2)
+        self.setup_max_current_entry = ttk.Entry(battery, textvariable=self.setup_max_current_var, width=10)
+        self.setup_max_current_entry.grid(row=1, column=1, sticky="w", padx=6, pady=2)
+
+        ttk.Label(battery, text="max_current_m1").grid(row=2, column=0, sticky="w", padx=6, pady=2)
+        self.setup_max_current_m1_entry = ttk.Entry(
+            battery, textvariable=self.setup_max_current_m1_var, width=10
+        )
+        self.setup_max_current_m1_entry.grid(row=2, column=1, sticky="w", padx=6, pady=2)
+
+        ttk.Label(battery, text="max_current_m2").grid(row=3, column=0, sticky="w", padx=6, pady=2)
+        self.setup_max_current_m2_entry = ttk.Entry(
+            battery, textvariable=self.setup_max_current_m2_var, width=10
+        )
+        self.setup_max_current_m2_entry.grid(row=3, column=1, sticky="w", padx=6, pady=(2, 6))
+
+        rc_inputs = ttk.LabelFrame(setup_frame, text="RC / Inputs")
+        rc_inputs.grid(row=0, column=3, sticky="nsew", padx=6, pady=6)
+        ttk.Label(rc_inputs, text="RC/PWM mapping is planned for expanded schema").grid(
+            row=0, column=0, sticky="w", padx=6, pady=(6, 2)
+        )
+        ttk.Label(rc_inputs, text="Use JSON editor for unsupported keys.").grid(
+            row=1, column=0, sticky="w", padx=6, pady=(0, 6)
+        )
+
+        ttk.Label(tab, textvariable=self.setup_form_status_var).grid(
+            row=5, column=0, columnspan=3, sticky="w", pady=(6, 0)
+        )
+
+        button_row_1 = ttk.Frame(tab)
+        button_row_1.grid(row=6, column=0, columnspan=3, sticky="w", pady=(8, 3))
+        ttk.Button(button_row_1, text="Dump Config", command=self._on_dump).pack(side="left", padx=(0, 8))
+        ttk.Button(button_row_1, text="Load JSON", command=self._load_config_editor).pack(side="left", padx=(0, 8))
+        ttk.Button(button_row_1, text="Load Form from JSON", command=self._load_setup_form_from_editor).pack(
+            side="left", padx=(0, 8)
+        )
+        ttk.Button(button_row_1, text="Apply Form to JSON", command=self._apply_setup_form_to_editor).pack(
+            side="left", padx=(0, 8)
+        )
+
+        button_row_2 = ttk.Frame(tab)
+        button_row_2.grid(row=7, column=0, columnspan=3, sticky="w", pady=(0, 3))
+        ttk.Button(button_row_2, text="Save JSON", command=self._save_config_editor).pack(side="left", padx=(0, 8))
+        ttk.Button(button_row_2, text="Format JSON", command=self._format_config_editor).pack(side="left", padx=(0, 8))
+        ttk.Button(button_row_2, text="Flash Config", command=self._on_flash).pack(side="left", padx=(0, 8))
+        ttk.Button(button_row_2, text="Flash Editor", command=self._flash_from_editor).pack(side="left", padx=(0, 8))
+        ttk.Button(button_row_2, text="Flash Form", command=self._flash_setup_form).pack(side="left")
+
+        ttk.Label(tab, text="Config Editor (JSON)").grid(row=8, column=0, columnspan=3, sticky="w", pady=(8, 0))
         self.config_editor = ScrolledText(tab, height=12)
-        self.config_editor.grid(row=6, column=0, columnspan=3, sticky="nsew", pady=(6, 0))
+        self.config_editor.grid(row=9, column=0, columnspan=3, sticky="nsew", pady=(6, 0))
 
-        ttk.Label(tab, text="Workflow Output").grid(row=7, column=0, columnspan=3, sticky="w", pady=(10, 0))
+        ttk.Label(tab, text="Workflow Output").grid(row=10, column=0, columnspan=3, sticky="w", pady=(10, 0))
         self.config_text = ScrolledText(tab, height=12)
-        self.config_text.grid(row=8, column=0, columnspan=3, sticky="nsew", pady=(6, 0))
+        self.config_text.grid(row=11, column=0, columnspan=3, sticky="nsew", pady=(6, 0))
 
     def _build_tab_test(self) -> None:
         tab = ttk.Frame(self.notebook, padding=10)
@@ -485,6 +576,132 @@ class MotionStudioDesktopShell:
     def _on_space_stop(self, _event: object) -> None:
         self._on_stop_all()
 
+    def _on_setup_toggle_current_mode(self, *_args: object) -> None:
+        unified = bool(self.setup_use_unified_current_var.get())
+        if unified:
+            self.setup_max_current_entry.configure(state="normal")
+            self.setup_max_current_m1_entry.configure(state="disabled")
+            self.setup_max_current_m2_entry.configure(state="disabled")
+        else:
+            self.setup_max_current_entry.configure(state="disabled")
+            self.setup_max_current_m1_entry.configure(state="normal")
+            self.setup_max_current_m2_entry.configure(state="normal")
+
+    def _load_setup_form_from_editor(self) -> None:
+        self._try_sync_form_from_editor(show_feedback=True)
+
+    def _try_sync_form_from_editor(self, *, show_feedback: bool) -> bool:
+        payload = self._read_editor_payload()
+        if payload is None:
+            return False
+
+        model = model_from_config_payload(payload)
+        self._set_setup_form_model(model)
+
+        unsupported = unsupported_parameter_keys(payload)
+        if unsupported:
+            msg = f"Loaded form with unsupported keys present: {', '.join(unsupported)}"
+        else:
+            msg = "Loaded form from JSON editor."
+        self.setup_form_status_var.set(msg)
+        if show_feedback:
+            messagebox.showinfo("Setup Form", msg)
+        return True
+
+    def _apply_setup_form_to_editor(self) -> bool:
+        model = self._read_setup_form_model()
+        if model is None:
+            return False
+
+        payload = config_payload_from_model(model)
+        self.config_editor.delete("1.0", "end")
+        self.config_editor.insert("end", json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        self.setup_form_status_var.set("Applied setup form to JSON editor.")
+        return True
+
+    def _flash_setup_form(self) -> None:
+        if not self._apply_setup_form_to_editor():
+            return
+        self._flash_from_editor()
+
+    def _read_setup_form_model(self) -> SetupFormModel | None:
+        mode_raw = self.setup_mode_var.get().strip()
+        try:
+            mode = int(mode_raw)
+        except ValueError:
+            messagebox.showerror("Invalid Mode", "Mode must be one of: 0, 1, 2, 3.")
+            return None
+        if mode not in {0, 1, 2, 3}:
+            messagebox.showerror("Invalid Mode", "Mode must be one of: 0, 1, 2, 3.")
+            return None
+
+        unified = bool(self.setup_use_unified_current_var.get())
+        if unified:
+            max_current = self._parse_optional_non_negative_int(
+                self.setup_max_current_var.get(),
+                "max_current",
+            )
+            if max_current is None and self.setup_max_current_var.get().strip():
+                return None
+            return SetupFormModel(mode=mode, use_unified_current=True, max_current=max_current)
+
+        max_current_m1 = self._parse_optional_non_negative_int(
+            self.setup_max_current_m1_var.get(),
+            "max_current_m1",
+        )
+        if max_current_m1 is None and self.setup_max_current_m1_var.get().strip():
+            return None
+        max_current_m2 = self._parse_optional_non_negative_int(
+            self.setup_max_current_m2_var.get(),
+            "max_current_m2",
+        )
+        if max_current_m2 is None and self.setup_max_current_m2_var.get().strip():
+            return None
+
+        return SetupFormModel(
+            mode=mode,
+            use_unified_current=False,
+            max_current_m1=max_current_m1,
+            max_current_m2=max_current_m2,
+        )
+
+    def _set_setup_form_model(self, model: SetupFormModel) -> None:
+        self.setup_mode_var.set(str(model.mode if model.mode is not None else 3))
+        self.setup_use_unified_current_var.set(bool(model.use_unified_current))
+        self.setup_max_current_var.set("" if model.max_current is None else str(model.max_current))
+        self.setup_max_current_m1_var.set("" if model.max_current_m1 is None else str(model.max_current_m1))
+        self.setup_max_current_m2_var.set("" if model.max_current_m2 is None else str(model.max_current_m2))
+        self._on_setup_toggle_current_mode()
+
+    def _parse_optional_non_negative_int(self, raw: str, field_name: str) -> int | None:
+        value = raw.strip()
+        if not value:
+            return None
+        try:
+            parsed = int(value)
+        except ValueError:
+            messagebox.showerror("Invalid Number", f"{field_name} must be an integer.")
+            return None
+        if parsed < 0:
+            messagebox.showerror("Invalid Number", f"{field_name} must be >= 0.")
+            return None
+        return parsed
+
+    def _read_editor_payload(self) -> dict[str, Any] | None:
+        raw = self.config_editor.get("1.0", "end").strip()
+        if not raw:
+            messagebox.showerror("Missing Config JSON", "Config editor is empty.")
+            return None
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            messagebox.showerror("Invalid JSON", str(exc))
+            return None
+        if not isinstance(payload, dict):
+            messagebox.showerror("Invalid JSON", "Config root must be a JSON object.")
+            return None
+        return payload
+
     def _load_config_editor(self) -> None:
         path = self.config_path_var.get().strip()
         if not path:
@@ -497,6 +714,7 @@ class MotionStudioDesktopShell:
             return
         self.config_editor.delete("1.0", "end")
         self.config_editor.insert("end", raw)
+        self._try_sync_form_from_editor(show_feedback=False)
 
     def _save_config_editor(self, *, show_message: bool = True) -> bool:
         path = self.config_path_var.get().strip()
@@ -504,18 +722,8 @@ class MotionStudioDesktopShell:
             messagebox.showerror("Missing Config Path", "Provide a config file path first.")
             return False
 
-        raw = self.config_editor.get("1.0", "end").strip()
-        if not raw:
-            messagebox.showerror("Missing Config JSON", "Config editor is empty.")
-            return False
-
-        try:
-            payload = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            messagebox.showerror("Invalid JSON", str(exc))
-            return False
-        if not isinstance(payload, dict):
-            messagebox.showerror("Invalid JSON", "Config root must be a JSON object.")
+        payload = self._read_editor_payload()
+        if payload is None:
             return False
 
         normalized = json.dumps(payload, indent=2, sort_keys=True) + "\n"
@@ -529,17 +737,15 @@ class MotionStudioDesktopShell:
         return True
 
     def _format_config_editor(self) -> None:
-        raw = self.config_editor.get("1.0", "end").strip()
-        if not raw:
+        if not self.config_editor.get("1.0", "end").strip():
             return
-        try:
-            payload = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            messagebox.showerror("Invalid JSON", str(exc))
+        payload = self._read_editor_payload()
+        if payload is None:
             return
         formatted = json.dumps(payload, indent=2, sort_keys=True) + "\n"
         self.config_editor.delete("1.0", "end")
         self.config_editor.insert("end", formatted)
+        self._try_sync_form_from_editor(show_feedback=False)
 
     def _flash_from_editor(self) -> None:
         if not self._save_config_editor(show_message=False):
